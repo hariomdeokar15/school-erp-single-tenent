@@ -48,14 +48,31 @@ jobs:
       - name: Build Web App
         run: pnpm --filter @schoolerp/web build
 
+      - name: Run Mobile App Typecheck Validation
+        run: pnpm --filter @schoolerp/mobile typecheck
+
   security-scans:
-    name: Security Scans (Gitleaks, Semgrep, Trivy)
+    name: Security Scans (Gitleaks, Dependabot, Semgrep, Trivy)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Setup Node.js 20 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Dependency Vulnerability Scan
+        run: pnpm audit --audit-level high
 
       - name: Run Gitleaks Secret Scan
         uses: gitleaks/gitleaks-action@v2
