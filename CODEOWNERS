@@ -1,0 +1,12 @@
+# CODEOWNERS — Critical Path Approvers for SchoolERP India
+
+# Global default owners
+* @schoolerp/tech-lead
+
+# Critical paths requiring explicit security & architecture approval
+/apps/api/src/auth/ @schoolerp/security-lead @schoolerp/tech-lead
+/apps/api/src/payments/ @schoolerp/payments-lead @schoolerp/tech-lead
+/apps/api/src/admissions/ @schoolerp/admissions-lead @schoolerp/tech-lead
+/apps/api/src/files/ @schoolerp/security-lead @schoolerp/tech-lead
+/apps/api/src/database/ @schoolerp/db-lead @schoolerp/tech-lead
+/infra/ @schoolerp/devops-lead @schoolerp/tech-lead

@@ -1,0 +1,44 @@
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+
+# Node dependencies & package locks
+node_modules/
+.pnpm-store/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build outputs & dist folders
+dist/
+build/
+.output/
+.expo/
+.next/
+*.tsbuildinfo
+
+# Test & coverage output
+coverage/
+.nyc_output/
+
+# Logs
+logs/
+*.log
+
+# Operating system & Editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Temporary & Cache files
+.cache/
+.turbo/
+scratch/

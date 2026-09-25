@@ -1,0 +1,15 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+
+allowBuilds:
+  '@nestjs/core': set this to true or false
+  '@swc/core': set this to true or false
+  esbuild: set this to true or false
+  msgpackr-extract: set this to true or false
+
+onlyBuiltDependencies:
+  - '@nestjs/core'
+  - '@swc/core'
+  - 'esbuild'
+  - 'msgpackr-extract'

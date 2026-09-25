@@ -1,0 +1,17 @@
+const en = {
+  appName: "SchoolERP India",
+  languageSwitcher: "Language",
+  loading: "Loading...",
+  retry: "Retry",
+  error: "An unexpected error occurred.",
+  healthStatus: "System Status",
+  apiUnavailable: "API is currently unavailable.",
+  statusHealthy: "Healthy",
+  statusDegraded: "Degraded",
+  statusDown: "Offline",
+  english: "English",
+  hindi: "हिंदी",
+  marathi: "मराठी",
+} as const;
+
+export default en;

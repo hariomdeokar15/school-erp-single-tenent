@@ -1,0 +1,22 @@
+{
+  "name": "schoolerp-root",
+  "private": true,
+  "version": "0.1.0",
+  "description": "SchoolERP India — Production Monorepo for Single Indian K-12 School",
+  "scripts": {
+    "build": "pnpm --recursive --filter \"./packages/*\" run build && pnpm --recursive --filter \"./apps/*\" run build",
+    "lint": "pnpm --recursive run lint",
+    "typecheck": "pnpm --recursive run typecheck",
+    "test": "pnpm --recursive run test",
+    "format": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:fix": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\""
+  },
+  "devDependencies": {
+    "prettier": "^3.2.5",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}

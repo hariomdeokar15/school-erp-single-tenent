@@ -1,0 +1,14 @@
+title = "Gitleaks Security Scanner Configuration for SchoolERP"
+
+[allowlist]
+description = "Global allowlist for harmless placeholders"
+paths = [
+  '''\.env\.example$''',
+  '''README\.md$''',
+  '''docs/'''
+]
+
+regexes = [
+  '''CHANGE_ME''',
+  '''<GENERATED_IN_SECRET_MANAGER>'''
+]
