@@ -142,8 +142,8 @@ importers:
         specifier: ~1.11.1
         version: 1.11.1
       i18next:
-        specifier: ^23.8.1
-        version: 23.16.8
+        specifier: ^26.4.2
+        version: 26.4.2(typescript@5.9.3)
       react:
         specifier: 18.2.0
         version: 18.2.0
@@ -152,7 +152,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       react-i18next:
         specifier: ^14.0.5
-        version: 14.1.3(i18next@23.16.8)(react-dom@18.2.0(react@18.2.0))(react-native@0.73.4(@babel/core@7.29.7(supports-color@8.1.1))(@babel/preset-env@7.29.7(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@18.2.0)(supports-color@8.1.1))(react@18.2.0)
+        version: 14.1.3(i18next@26.4.2(typescript@5.9.3))(react-dom@18.2.0(react@18.2.0))(react-native@0.73.4(@babel/core@7.29.7(supports-color@8.1.1))(@babel/preset-env@7.29.7(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@18.2.0)(supports-color@8.1.1))(react@18.2.0)
       react-native:
         specifier: 0.73.4
         version: 0.73.4(@babel/core@7.29.7(supports-color@8.1.1))(@babel/preset-env@7.29.7(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@18.2.0)(supports-color@8.1.1)
@@ -191,8 +191,8 @@ importers:
         specifier: ^5.17.19
         version: 5.103.2(react@18.2.0)
       i18next:
-        specifier: ^23.8.1
-        version: 23.16.8
+        specifier: ^26.4.2
+        version: 26.4.2(typescript@5.9.3)
       lucide-react:
         specifier: ^0.316.0
         version: 0.316.0(react@18.2.0)
@@ -204,7 +204,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       react-i18next:
         specifier: ^14.0.5
-        version: 14.1.3(i18next@23.16.8)(react-dom@18.2.0(react@18.2.0))(react-native@0.73.4(@babel/core@7.29.7(supports-color@8.1.1))(@babel/preset-env@7.29.7(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@18.2.0)(supports-color@8.1.1))(react@18.2.0)
+        version: 14.1.3(i18next@26.4.2(typescript@5.9.3))(react-dom@18.2.0(react@18.2.0))(react-native@0.73.4(@babel/core@7.29.7(supports-color@8.1.1))(@babel/preset-env@7.29.7(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@18.2.0)(supports-color@8.1.1))(react@18.2.0)
       react-router-dom:
         specifier: ^6.21.3
         version: 6.30.6(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -3690,8 +3690,13 @@ packages:
     resolution: {integrity: sha512-AXcZb6vzzrFAUE61HnN4mpLqd/cSIwNQjtNWR0euPm6y0iqx3G4gOXaIDdtdDwZmhwe82LA6+zinmW4UBWVePQ==}
     engines: {node: '>=16.17.0'}
 
-  i18next@23.16.8:
-    resolution: {integrity: sha512-06r/TitrM88Mg5FdUXAKL96dJMzgqLE5dv3ryBAra4KCwD9mJ4ndOTS95ZuymIGoE+2hzfdaMak2X11/es7ZWg==}
+  i18next@26.4.2:
+    resolution: {integrity: sha512-RX+R0VLg13IbvRuJSxnqykUFS9vQZTl8wYpWPCIUDWVrSGjsQywB5Y+pjzrkboxGAuYfJZVH1InFTdgBdxq6ug==}
+    peerDependencies:
+      typescript: ^5 || ^6 || ^7
+    peerDependenciesMeta:
+      typescript:
+        optional: true
 
   iconv-lite@0.4.24:
     resolution: {integrity: sha512-v3MXnZAcvnywkTUEZomIActle7RXXeedOR31wwl7VlyoXO4Qi9arvSenNQWne1TcRwhCL1HwLI21bEqdpj8/rA==}
@@ -8311,7 +8316,7 @@ snapshots:
       '@babel/template': 7.29.7
       '@react-native/babel-plugin-codegen': 0.73.4(@babel/preset-env@7.29.7(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(supports-color@8.1.1)
       babel-plugin-transform-flow-enums: 0.0.2(@babel/core@7.29.7(supports-color@8.1.1))
-      react-refresh: 0.14.0
+      react-refresh: 0.14.2
     transitivePeerDependencies:
       - '@babel/preset-env'
       - supports-color
@@ -10722,9 +10727,9 @@ snapshots:
 
   human-signals@5.0.0: {}
 
-  i18next@23.16.8:
-    dependencies:
-      '@babel/runtime': 7.29.7
+  i18next@26.4.2(typescript@5.9.3):
+    optionalDependencies:
+      typescript: 5.9.3
 
   iconv-lite@0.4.24:
     dependencies:
@@ -11440,7 +11445,7 @@ snapshots:
       '@babel/types': 7.29.8
       flow-enums-runtime: 0.0.6
       invariant: 2.2.4
-      metro-symbolicate: 0.80.12
+      metro-symbolicate: 0.80.12(supports-color@8.1.1)
       nullthrows: 1.1.1
       ob1: 0.80.12
       source-map: 0.5.7
@@ -11448,7 +11453,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  metro-symbolicate@0.80.12:
+  metro-symbolicate@0.80.12(supports-color@8.1.1):
     dependencies:
       flow-enums-runtime: 0.0.6
       invariant: 2.2.4
@@ -11457,6 +11462,8 @@ snapshots:
       source-map: 0.5.7
       through2: 2.0.5
       vlq: 1.0.1
+    transitivePeerDependencies:
+      - supports-color
 
   metro-transform-plugins@0.80.12(supports-color@8.1.1):
     dependencies:
@@ -11522,7 +11529,7 @@ snapshots:
       metro-resolver: 0.80.12
       metro-runtime: 0.80.12
       metro-source-map: 0.80.12(supports-color@8.1.1)
-      metro-symbolicate: 0.80.12
+      metro-symbolicate: 0.80.12(supports-color@8.1.1)
       metro-transform-plugins: 0.80.12(supports-color@8.1.1)
       metro-transform-worker: 0.80.12(supports-color@8.1.1)
       mime-types: 2.1.35
@@ -12149,11 +12156,11 @@ snapshots:
     dependencies:
       react: 18.2.0
 
-  react-i18next@14.1.3(i18next@23.16.8)(react-dom@18.2.0(react@18.2.0))(react-native@0.73.4(@babel/core@7.29.7(supports-color@8.1.1))(@babel/preset-env@7.29.7(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@18.2.0)(supports-color@8.1.1))(react@18.2.0):
+  react-i18next@14.1.3(i18next@26.4.2(typescript@5.9.3))(react-dom@18.2.0(react@18.2.0))(react-native@0.73.4(@babel/core@7.29.7(supports-color@8.1.1))(@babel/preset-env@7.29.7(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@18.2.0)(supports-color@8.1.1))(react@18.2.0):
     dependencies:
       '@babel/runtime': 7.29.7
       html-parse-stringify: 3.1.0
-      i18next: 23.16.8
+      i18next: 26.4.2(typescript@5.9.3)
       react: 18.2.0
     optionalDependencies:
       react-dom: 18.2.0(react@18.2.0)
