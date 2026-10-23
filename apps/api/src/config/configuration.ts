@@ -15,6 +15,9 @@ export default () => {
       privateKey: env.JWT_PRIVATE_KEY,
       publicKey: env.JWT_PUBLIC_KEY,
     },
+    features: {
+      enabled: env.FEATURE_FLAGS,
+    },
     cors: {
       origins: env.CORS_ALLOWED_ORIGINS.split(",").map((origin) =>
         origin.trim(),

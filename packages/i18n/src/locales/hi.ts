@@ -12,6 +12,17 @@ const hi = {
   english: "English",
   hindi: "हिंदी",
   marathi: "मराठी",
+  signIn: "साइन इन करें",
+  email: "ईमेल",
+  password: "पासवर्ड",
+  currentPassword: "वर्तमान पासवर्ड",
+  newPassword: "नया पासवर्ड",
+  changePassword: "पासवर्ड बदलें",
+  signOut: "साइन आउट करें",
+  authRequired: "जारी रखने के लिए साइन इन करें।",
+  authFailed: "साइन इन नहीं हुआ। विवरण जाँचकर फिर प्रयास करें।",
+  passwordChanged: "पासवर्ड बदल गया है। फिर से साइन इन करें।",
+  temporaryPasswordNotice: "आगे बढ़ने से पहले नया पासवर्ड सेट करें।",
 } as const;
 
 export default hi;

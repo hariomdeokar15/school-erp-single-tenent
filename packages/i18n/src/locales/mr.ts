@@ -12,6 +12,17 @@ const mr = {
   english: "English",
   hindi: "हिंदी",
   marathi: "मराठी",
+  signIn: "साइन इन करा",
+  email: "ईमेल",
+  password: "पासवर्ड",
+  currentPassword: "सध्याचा पासवर्ड",
+  newPassword: "नवीन पासवर्ड",
+  changePassword: "पासवर्ड बदला",
+  signOut: "साइन आउट करा",
+  authRequired: "पुढे जाण्यासाठी साइन इन करा.",
+  authFailed: "साइन इन झाले नाही. तपशील तपासून पुन्हा प्रयत्न करा.",
+  passwordChanged: "पासवर्ड बदलला आहे. पुन्हा साइन इन करा.",
+  temporaryPasswordNotice: "पुढे जाण्यापूर्वी नवीन पासवर्ड सेट करा.",
 } as const;
 
 export default mr;

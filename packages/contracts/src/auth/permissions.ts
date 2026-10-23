@@ -1,5 +1,7 @@
 export enum Permission {
-  // Permission skeleton structure (unassigned to modules in M0 foundation)
+  USER_MANAGE = "user:manage",
+  ADMISSION_READ = "admission:read",
+  ADMISSION_WRITE = "admission:write",
   ACADEMIC_READ = "academic:read",
   ACADEMIC_WRITE = "academic:write",
   STUDENT_READ = "student:read",
@@ -8,4 +10,6 @@ export enum Permission {
   FEE_WRITE = "fee:write",
   ATTENDANCE_READ = "attendance:read",
   ATTENDANCE_WRITE = "attendance:write",
+  TRANSPORT_READ = "transport:read",
+  TRANSPORT_WRITE = "transport:write",
 }
