@@ -12,6 +12,17 @@ const en = {
   english: "English",
   hindi: "हिंदी",
   marathi: "मराठी",
+  signIn: "Sign in",
+  email: "Email",
+  password: "Password",
+  currentPassword: "Current password",
+  newPassword: "New password",
+  changePassword: "Change password",
+  signOut: "Sign out",
+  authRequired: "Sign in to continue.",
+  authFailed: "Sign-in failed. Check your details and try again.",
+  passwordChanged: "Your password has been changed. Sign in again.",
+  temporaryPasswordNotice: "Set a new password before continuing.",
 } as const;
 
 export default en;

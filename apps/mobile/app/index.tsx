@@ -5,14 +5,178 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  TextInput,
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import { HealthStatusResponse } from "@schoolerp/contracts";
-import { fetchMobileApi } from "../lib/api-client";
+import {
+  changeMobilePassword,
+  fetchMobileApi,
+  loginMobile,
+  logoutMobile,
+  MobileUser,
+  restoreMobileSession,
+} from "../lib/api-client";
 import { SupportedLanguage } from "@schoolerp/i18n";
 import { OfflineNotice } from "../components/OfflineNotice";
 
-export default function HomeScreen() {
+export default function AppIndex() {
+  const [user, setUser] = useState<MobileUser | null>(null);
+  const [restoring, setRestoring] = useState(true);
+
+  useEffect(() => {
+    restoreMobileSession()
+      .then(setUser)
+      .catch(() => setUser(null))
+      .finally(() => setRestoring(false));
+  }, []);
+
+  if (restoring) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#4f46e5" />
+      </View>
+    );
+  }
+  if (!user) return <SignInScreen onSignedIn={setUser} />;
+  if (user.mustChangePassword) {
+    return <ChangePasswordScreen onComplete={() => setUser(null)} />;
+  }
+  return (
+    <HomeScreen
+      user={user}
+      onLogout={async () => {
+        await logoutMobile().catch(() => undefined);
+        setUser(null);
+      }}
+    />
+  );
+}
+
+function SignInScreen({ onSignedIn }: { onSignedIn(user: MobileUser): void }) {
+  const { t } = useTranslation();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const submit = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      onSignedIn(await loginMobile(email, password));
+    } catch {
+      setError(t("authFailed"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <View style={styles.authContainer}>
+      <Text style={styles.title}>{t("signIn")}</Text>
+      <TextInput
+        style={styles.input}
+        value={email}
+        onChangeText={setEmail}
+        autoCapitalize="none"
+        keyboardType="email-address"
+        autoComplete="email"
+        placeholder={t("email")}
+      />
+      <TextInput
+        style={styles.input}
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+        autoComplete="password"
+        placeholder={t("password")}
+      />
+      {error ? (
+        <Text accessibilityRole="alert" style={styles.authError}>
+          {error}
+        </Text>
+      ) : null}
+      <TouchableOpacity
+        style={styles.authButton}
+        disabled={loading}
+        onPress={() => void submit()}
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.authButtonText}>{t("signIn")}</Text>
+        )}
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+function ChangePasswordScreen({ onComplete }: { onComplete(): void }) {
+  const { t } = useTranslation();
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const submit = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      await changeMobilePassword(currentPassword, newPassword);
+      onComplete();
+    } catch {
+      setError(t("error"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <View style={styles.authContainer}>
+      <Text style={styles.title}>{t("changePassword")}</Text>
+      <Text style={styles.subtitle}>{t("temporaryPasswordNotice")}</Text>
+      <TextInput
+        style={styles.input}
+        value={currentPassword}
+        onChangeText={setCurrentPassword}
+        secureTextEntry
+        placeholder={t("currentPassword")}
+      />
+      <TextInput
+        style={styles.input}
+        value={newPassword}
+        onChangeText={setNewPassword}
+        secureTextEntry
+        placeholder={t("newPassword")}
+      />
+      {error ? (
+        <Text accessibilityRole="alert" style={styles.authError}>
+          {error}
+        </Text>
+      ) : null}
+      <TouchableOpacity
+        style={styles.authButton}
+        disabled={loading}
+        onPress={() => void submit()}
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.authButtonText}>{t("changePassword")}</Text>
+        )}
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+function HomeScreen({
+  user,
+  onLogout,
+}: {
+  user: MobileUser;
+  onLogout(): void;
+}) {
   const { t, i18n } = useTranslation();
   const [healthData, setHealthData] = useState<HealthStatusResponse | null>(
     null,
@@ -47,9 +211,13 @@ export default function HomeScreen() {
 
       <View style={styles.content}>
         <Text style={styles.title}>{t("appName")}</Text>
-        <Text style={styles.subtitle}>
-          Mobile App Foundation (Android & iOS)
-        </Text>
+        <Text style={styles.subtitle}>{user.displayName}</Text>
+        <TouchableOpacity
+          style={styles.authButton}
+          onPress={() => void onLogout()}
+        >
+          <Text style={styles.authButtonText}>{t("signOut")}</Text>
+        </TouchableOpacity>
 
         {/* Language Switcher */}
         <View style={styles.langContainer}>
@@ -157,6 +325,31 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  authContainer: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 24,
+    backgroundColor: "#f8fafc",
+  },
+  input: {
+    backgroundColor: "#fff",
+    borderColor: "#cbd5e1",
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 14,
+  },
+  authButton: {
+    backgroundColor: "#4f46e5",
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  authButtonText: { color: "#fff", fontWeight: "700" },
+  authError: { color: "#b91c1c", marginBottom: 12 },
   container: {
     flex: 1,
     backgroundColor: "#f8fafc",

@@ -4,19 +4,24 @@
   "version": "0.1.0",
   "description": "SchoolERP India — Production Monorepo for Single Indian K-12 School",
   "scripts": {
-    "build": "pnpm --recursive --filter \"./packages/*\" run build && pnpm --recursive --filter \"./apps/*\" run build",
-    "lint": "pnpm --recursive run lint",
-    "typecheck": "pnpm --recursive run typecheck",
-    "test": "pnpm --recursive run test",
+    "build": "corepack pnpm --recursive --if-present --filter \"./packages/*\" run build && corepack pnpm --recursive --if-present --filter \"./apps/*\" run build",
+    "lint": "corepack pnpm --recursive --if-present run lint",
+    "typecheck": "corepack pnpm --recursive --if-present run typecheck",
+    "test": "corepack pnpm --recursive --if-present run test",
     "format": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:fix": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\""
   },
   "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "eslint": "10.12.0",
+    "globals": "17.13.0",
     "prettier": "^3.2.5",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "typescript-eslint": "8.71.1"
   },
   "engines": {
-    "node": ">=20.0.0",
+    "node": ">=20.19.0",
     "pnpm": ">=8.0.0"
-  }
+  },
+  "packageManager": "pnpm@9.15.4+sha512.b2dc20e2fc72b3e18848459b37359a32064663e5627a51e4c74b2c29dd8e8e0491483c3abb40789cfd578bf362fb6ba8261b05f0387d76792ed6e23ea3b1b6a0"
 }
