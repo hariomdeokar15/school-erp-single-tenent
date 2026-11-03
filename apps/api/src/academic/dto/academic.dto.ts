@@ -8,6 +8,8 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  ValidateNested,
+  ValidateIf,
   Length,
   Matches,
   Max,
@@ -258,6 +260,48 @@ export class StudentQueryDto extends PageQueryDto {
   search?: string;
 }
 
+export class CreateFamilyPortalDto {
+  @IsIn(["CREATE", "LINK_EXISTING"])
+  action!: "CREATE" | "LINK_EXISTING";
+
+  @IsString()
+  @Length(1, 50)
+  relationship!: string;
+
+  @ValidateIf((input: CreateFamilyPortalDto) => input.action === "CREATE")
+  @IsString()
+  @Length(1, 120)
+  guardianFirstName!: string;
+
+  @ValidateIf((input: CreateFamilyPortalDto) => input.action === "CREATE")
+  @IsString()
+  @Length(1, 120)
+  guardianLastName!: string;
+
+  @ValidateIf((input: CreateFamilyPortalDto) => input.action === "CREATE")
+  @IsEmail()
+  @MaxLength(320)
+  email!: string;
+
+  @ValidateIf((input: CreateFamilyPortalDto) => input.action === "CREATE")
+  @IsOptional()
+  @IsString()
+  @Length(7, 20)
+  @Matches(/^\+?[0-9][0-9 ()-]{5,18}$/)
+  phone?: string;
+
+  @ValidateIf((input: CreateFamilyPortalDto) => input.action === "CREATE")
+  @IsString()
+  @Length(12, 128)
+  initialPassword!: string;
+
+  @ValidateIf(
+    (input: CreateFamilyPortalDto) => input.action === "LINK_EXISTING",
+  )
+  @IsUUID()
+  userId?: string;
+}
+
 export class CreateStudentDto {
   @IsString()
   @Length(1, 40)
@@ -276,10 +320,15 @@ export class CreateStudentDto {
   @IsDateString({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   dateOfBirth?: string | null;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CreateFamilyPortalDto)
+  familyPortal?: CreateFamilyPortalDto;
 }
 
 export class UpdateStudentDto extends PartialType(
-  OmitType(CreateStudentDto, ["studentNumber"] as const),
+  OmitType(CreateStudentDto, ["studentNumber", "familyPortal"] as const),
 ) {}
 
 export class CreateGuardianDto {

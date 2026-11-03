@@ -304,6 +304,7 @@ Student routes require a bearer token. Student reads require `student:read`; stu
 | Method | Endpoint | Body |
 | --- | --- | --- |
 | `GET` | `/students?page=1&pageSize=25&search=riya&academicYearId={yearId}&sectionId={sectionId}` | None; filters are optional |
+| `GET` | `/students/family-portal-accounts` | None; lists active parent accounts available for linking a sibling |
 | `GET` | `/students/{id}` | None |
 | `GET` | `/students/{id}/enrollments` | None |
 | `POST` | `/students` | See create example below |
@@ -320,6 +321,43 @@ Create student:
   "dateOfBirth": "2016-08-14"
 }
 ```
+
+Create a student and a parent/guardian family login in one transaction. The login has the `PARENT` role and opens the Parent dashboard for the linked child. Use this same family account for siblings by choosing `LINK_EXISTING` and the existing parent `userId`.
+
+```json
+{
+  "studentNumber": "STU-2026-002",
+  "firstName": "Aarav",
+  "lastName": "Sharma",
+  "dateOfBirth": "2020-08-14",
+  "familyPortal": {
+    "action": "CREATE",
+    "guardianFirstName": "Amit",
+    "guardianLastName": "Sharma",
+    "relationship": "Father",
+    "email": "amit.sharma@example.com",
+    "phone": "+91 9876543210",
+    "initialPassword": "Use-A-Long-Test-Password"
+  }
+}
+```
+
+Link another child to an existing family login:
+
+```json
+{
+  "studentNumber": "STU-2026-003",
+  "firstName": "Anaya",
+  "lastName": "Sharma",
+  "familyPortal": {
+    "action": "LINK_EXISTING",
+    "relationship": "Mother",
+    "userId": "<existing parent account userId>"
+  }
+}
+```
+
+Student creation, guardian linking, and new parent account creation commit or roll back together. New family accounts must change their initial password on first sign-in.
 
 Update student:
 

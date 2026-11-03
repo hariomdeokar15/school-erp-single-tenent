@@ -8,7 +8,10 @@ type SupportedLanguage = (typeof supportedLanguages)[number];
 function getInitialLanguage(): SupportedLanguage {
   try {
     const savedLanguage = localStorage.getItem("schoolerp.language");
-    if (savedLanguage && supportedLanguages.includes(savedLanguage as SupportedLanguage)) {
+    if (
+      savedLanguage &&
+      supportedLanguages.includes(savedLanguage as SupportedLanguage)
+    ) {
       return savedLanguage as SupportedLanguage;
     }
   } catch {
@@ -30,8 +33,15 @@ i18n.use(initReactI18next).init({
   },
 });
 
+if (typeof document !== "undefined") {
+  document.documentElement.lang = i18n.language;
+}
+
 i18n.on("languageChanged", (language) => {
   if (!supportedLanguages.includes(language as SupportedLanguage)) return;
+  if (typeof document !== "undefined") {
+    document.documentElement.lang = language;
+  }
   try {
     localStorage.setItem("schoolerp.language", language);
   } catch {

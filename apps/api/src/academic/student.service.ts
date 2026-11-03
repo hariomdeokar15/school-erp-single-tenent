@@ -13,6 +13,7 @@ import {
   IsNull,
   Repository,
 } from "typeorm";
+import * as argon2 from "argon2";
 import { AuditEvent } from "../audit/entities/audit-event.entity";
 import { AuthenticatedUser } from "../auth/auth.types";
 import { RoleAssignment } from "../auth/entities/role-assignment.entity";
@@ -171,6 +172,15 @@ export class StudentService {
     actor: AuthenticatedUser,
     context: AuditRequestContext,
   ): Promise<Record<string, unknown>> {
+    const familyPasswordHash =
+      input.familyPortal?.action === "CREATE"
+        ? await argon2.hash(input.familyPortal.initialPassword, {
+            type: argon2.argon2id,
+            memoryCost: 19_456,
+            timeCost: 2,
+            parallelism: 1,
+          })
+        : undefined;
     const saved = await this.dataSource
       .transaction(async (manager) => {
         const student = await manager.getRepository(Student).save({
@@ -192,10 +202,154 @@ export class StudentService {
           "student",
           student.id,
         );
-        return student;
+        let familyPortalAccount: { email: string } | undefined;
+        if (input.familyPortal?.action === "LINK_EXISTING") {
+          const portal = input.familyPortal;
+          const user = await manager.getRepository(User).findOne({
+            where: { id: portal.userId },
+            relations: { roleAssignments: true },
+          });
+          if (
+            !user ||
+            user.status !== UserStatus.ACTIVE ||
+            !user.roleAssignments.some(
+              (assignment) => assignment.role === UserRole.PARENT,
+            )
+          ) {
+            throw new BadRequestException(
+              "Choose an active parent portal account.",
+            );
+          }
+          const guardian = await manager.getRepository(Guardian).findOne({
+            where: { userId: user.id },
+          });
+          if (!guardian) {
+            throw new BadRequestException(
+              "This account is not linked to a guardian record yet.",
+            );
+          }
+          await manager.getRepository(StudentGuardian).save(
+            manager.getRepository(StudentGuardian).create({
+              studentId: student.id,
+              guardianId: guardian.id,
+              relationship: portal.relationship.trim(),
+              isPrimaryContact: true,
+            }),
+          );
+          await this.recordAuditWithManager(
+            manager,
+            actor,
+            context,
+            "student.guardian.linked",
+            "guardian",
+            guardian.id,
+            { studentId: student.id, isPrimaryContact: true },
+          );
+          familyPortalAccount = { email: user.email };
+        } else if (
+          input.familyPortal?.action === "CREATE" &&
+          familyPasswordHash
+        ) {
+          const portal = input.familyPortal;
+          const email = portal.email.trim().toLowerCase();
+          const userRepository = manager.getRepository(User);
+          const user = await userRepository.save(
+            userRepository.create({
+              email,
+              displayName: `${this.requiredText(portal.guardianFirstName, "Guardian first name")} ${this.requiredText(portal.guardianLastName, "Guardian last name")}`,
+              passwordHash: familyPasswordHash,
+              status: UserStatus.ACTIVE,
+              mustChangePassword: true,
+            }),
+          );
+          await manager.getRepository(RoleAssignment).save(
+            manager.getRepository(RoleAssignment).create({
+              userId: user.id,
+              role: UserRole.PARENT,
+            }),
+          );
+          const guardianRepository = manager.getRepository(Guardian);
+          const guardian = await guardianRepository.save(
+            guardianRepository.create({
+              firstName: portal.guardianFirstName.trim(),
+              lastName: portal.guardianLastName.trim(),
+              email,
+              phone: portal.phone?.trim() || null,
+              userId: user.id,
+            }),
+          );
+          await manager.getRepository(StudentGuardian).save(
+            manager.getRepository(StudentGuardian).create({
+              studentId: student.id,
+              guardianId: guardian.id,
+              relationship: portal.relationship.trim(),
+              isPrimaryContact: true,
+            }),
+          );
+          await this.recordAuditWithManager(
+            manager,
+            actor,
+            context,
+            "auth.family_portal.created",
+            "user",
+            user.id,
+            { role: UserRole.PARENT, studentId: student.id },
+          );
+          await this.recordAuditWithManager(
+            manager,
+            actor,
+            context,
+            "student.guardian.linked",
+            "guardian",
+            guardian.id,
+            { studentId: student.id, isPrimaryContact: true },
+          );
+          familyPortalAccount = { email: user.email };
+        }
+        return { student, familyPortalAccount };
       })
       .catch((error: unknown) => this.mapStudentWriteError(error));
-    return this.studentSummary(saved, actor, true);
+    return {
+      ...this.studentSummary(saved.student, actor, true),
+      ...(saved.familyPortalAccount
+        ? { familyPortal: saved.familyPortalAccount }
+        : {}),
+    };
+  }
+
+  async listFamilyPortalAccounts(): Promise<Record<string, unknown>[]> {
+    const guardians = await this.guardians
+      .createQueryBuilder("guardian")
+      .innerJoinAndSelect("guardian.user", "user")
+      .innerJoin(
+        "user.roleAssignments",
+        "roleAssignment",
+        "roleAssignment.role = :role",
+        {
+          role: UserRole.PARENT,
+        },
+      )
+      .select([
+        "guardian.id",
+        "guardian.userId",
+        "guardian.firstName",
+        "guardian.lastName",
+        "user.id",
+        "user.email",
+        "user.displayName",
+      ])
+      .where("user.status = :status", { status: UserStatus.ACTIVE })
+      .orderBy("user.displayName", "ASC")
+      .getMany();
+
+    return guardians.map((guardian) => ({
+      guardianId: guardian.id,
+      userId: guardian.userId,
+      displayName:
+        guardian.user?.displayName ??
+        `${guardian.firstName} ${guardian.lastName}`,
+      email: guardian.user?.email ?? guardian.email,
+    }));
   }
 
   async update(
@@ -779,9 +933,16 @@ export class StudentService {
   }
 
   private mapStudentWriteError(error: unknown): never {
-    const code = (error as { driverError?: { code?: string } })?.driverError
-      ?.code;
+    const driverError = (
+      error as { driverError?: { code?: string; constraint?: string } }
+    )?.driverError;
+    const code = driverError?.code;
     if (code === "23505" || code === "23P01") {
+      if (driverError?.constraint?.includes("users_email")) {
+        throw new ConflictException(
+          "An account with this guardian email already exists. Use a unique email or link the existing guardian account after creating the student.",
+        );
+      }
       throw new ConflictException(
         "The requested student, guardian, or enrollment change conflicts with an existing record.",
       );

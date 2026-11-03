@@ -5,6 +5,12 @@ let refreshToken: string | undefined;
 let refreshInFlight:
   Promise<{ accessToken: string; refreshToken: string } | null> | undefined;
 
+function notifySessionExpired() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("schoolerp:session-expired"));
+  }
+}
+
 class ApiRequestError extends Error {
   constructor(
     message: string,
@@ -12,6 +18,13 @@ class ApiRequestError extends Error {
   ) {
     super(message);
   }
+}
+
+export function isApiUnavailableError(error: unknown): boolean {
+  return (
+    error instanceof TypeError ||
+    (error instanceof ApiRequestError && error.statusCode >= 500)
+  );
 }
 
 export function setApiSession(tokens?: {
@@ -67,7 +80,18 @@ export async function fetchApi<T>(
     }
     const refreshed = await refreshApiSession();
     if (!refreshed) throw error;
-    return rawFetch<T>(path, options, accessToken);
+    try {
+      return await rawFetch<T>(path, options, accessToken);
+    } catch (retryError) {
+      if (
+        retryError instanceof ApiRequestError &&
+        retryError.statusCode === 401
+      ) {
+        setApiSession();
+        notifySessionExpired();
+      }
+      throw retryError;
+    }
   }
 }
 
@@ -89,8 +113,17 @@ function refreshApiSession(): Promise<{
       setApiSession(tokens);
       return tokens;
     })
-    .catch(() => {
-      setApiSession();
+    .catch((error: unknown) => {
+      // A network outage or API 5xx is not evidence that the user signed out.
+      // Keep the refresh token so the next request can retry. Clear the session
+      // only when the server explicitly rejects the refresh credentials.
+      if (
+        error instanceof ApiRequestError &&
+        (error.statusCode === 401 || error.statusCode === 403)
+      ) {
+        setApiSession();
+        notifySessionExpired();
+      }
       return null;
     })
     .finally(() => {

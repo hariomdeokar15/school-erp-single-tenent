@@ -2,6 +2,7 @@ import React, {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -33,6 +34,13 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: React.PropsWithChildren) {
   const [user, setUser] = useState<SignedInUser | null>(null);
+
+  useEffect(() => {
+    const onSessionExpired = () => setUser(null);
+    window.addEventListener("schoolerp:session-expired", onSessionExpired);
+    return () =>
+      window.removeEventListener("schoolerp:session-expired", onSessionExpired);
+  }, []);
 
   const login = useCallback(async (email: string, password: string) => {
     const tokens = await fetchApi<TokenPair>("/api/v1/auth/login", {

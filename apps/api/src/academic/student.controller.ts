@@ -33,6 +33,12 @@ import { StudentService } from "./student.service";
 export class StudentController {
   constructor(private readonly students: StudentService) {}
 
+  @Get("family-portal-accounts")
+  @RequirePermissions(Permission.STUDENT_WRITE)
+  listFamilyPortalAccounts() {
+    return this.students.listFamilyPortalAccounts();
+  }
+
   @Get()
   @RequirePermissions(Permission.STUDENT_READ)
   list(
