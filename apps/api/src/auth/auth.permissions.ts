@@ -28,7 +28,11 @@ export const ROLE_PERMISSIONS: Readonly<
     Permission.ATTENDANCE_READ,
     Permission.FEE_READ,
   ],
-  [UserRole.STUDENT]: [Permission.ACADEMIC_READ, Permission.ATTENDANCE_READ],
+  [UserRole.STUDENT]: [
+    Permission.ACADEMIC_READ,
+    Permission.STUDENT_READ,
+    Permission.ATTENDANCE_READ,
+  ],
   [UserRole.TRANSPORT_MANAGER]: [
     Permission.STUDENT_READ,
     Permission.TRANSPORT_READ,

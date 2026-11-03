@@ -13,13 +13,14 @@ Use this note as a short starting point for future AI sessions. The linked sourc
 ## Product scope and order
 
 - Core roles: principal, administrator, admissions officer, accountant, teacher, parent/guardian, student, and transport manager.
+- Family portal decision: young children do not need separate login accounts. A parent/guardian owns the `PARENT` portal account, can link multiple children to it, and may use the same family login with a child. It opens the Parent dashboard and returns only children linked to that guardian account. Do not create a Student login by default for a young child; any future independent student login needs age-appropriate product and privacy review.
 - Build in this order: M0 foundation -> M2 academic/student masters -> M1 admissions -> M3 fees/payments -> M4 attendance -> M5 communication -> M6 homework -> M7 exams/report cards -> M8 transport.
 - Later/non-MVP areas such as multi-school operations, payroll/HR, hostel/library/inventory, biometrics, AI grading, surveillance, and targeted advertising require approved change control.
 - Every module needs API, web/mobile integration, tests, documentation, monitoring, localization, and loading/empty/error/retry/forbidden states before it is considered done.
 
 ## Security, privacy, and data integrity
 
-- Enforce role, action, and object-scope authorization server-side. Parents see linked children only; teachers see assigned classes/subjects only; students see their own permitted records.
+- Enforce role, action, and object-scope authorization server-side. Parents see linked children only; teachers see assigned classes/subjects only; any separately provisioned student account sees its own permitted records.
 - Use synthetic data only in AI prompts, fixtures, logs, and screenshots. Never expose secrets, real student data, identity documents, OTPs, or payment payloads.
 - Use DTO validation, safe errors, correlation IDs, audit events for sensitive changes, pagination/bounds, and authorization tests.
 - Use migrations, foreign keys/check/unique constraints/indexes, transactions for multi-record business actions, idempotency for retryable critical operations, integer paise or fixed-precision money, and UTC timestamps.

@@ -1,0 +1,655 @@
+%PDF-1.4
+%ту╧╙
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [7 0 R 9 0 R 11 0 R 13 0 R 15 0 R 17 0 R 19 0 R 21 0 R] /Count 8 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>
+endobj
+6 0 obj
+<< /Length 5279 >>
+stream
+BT /F2 20 Tf 0.12 0.15 0.19 rg 48.00 789.89 Td (SchoolERP API Reference) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 755.89 Td (Version: 0.1.0) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 743.89 Td (Base URL \(local\): http://localhost:3002/api/v1) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 731.89 Td (Interactive OpenAPI UI: http://localhost:3002/api/v1/docs) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 712.89 Td (This reference documents the API routes currently implemented in the NestJS API. It is intended for local) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 700.89 Td (development and manual testing. The examples use fictional data; replace UUID placeholders with IDs) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 688.89 Td (returned by earlier requests.) Tj ET
+0.12 0.32 0.52 rg 48.00 667.89 2 14 re f
+BT /F2 14 Tf 0.12 0.15 0.19 rg 56.00 669.89 Td (Authentication and request rules) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 642.89 Td (Х Health routes and POST /auth/login and POST /auth/refresh are public. Other routes require a bearer) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 630.89 Td (access token unless stated otherwise.) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 618.89 Td (Х Log in, copy accessToken, then use Swagger's Authorize button. For an HTTP Bearer scheme, paste the) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 606.89 Td (token value; Swagger adds the Bearer prefix.) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 594.89 Td (Х JSON request bodies must use double-quoted property names and string values.) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 582.89 Td (Х The API validates request bodies. Unknown properties are rejected. Dates below use YYYY-MM-DD.) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 570.89 Td (Х Pagination query parameters use page \(default 1\) and pageSize \(default 25, maximum 100\).) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 558.89 Td (Х :id, :yearId, :classLevelId, :sectionId, and :enrollmentId are UUID path parameters unless the route) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 546.89 Td (indicates otherwise.) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 534.89 Td (Х Do not share access tokens, refresh tokens, passwords, or real student/guardian data in screenshots or) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 522.89 Td (chat.) Tj ET
+0.12 0.32 0.52 rg 48.00 501.89 2 14 re f
+BT /F2 14 Tf 0.12 0.15 0.19 rg 56.00 503.89 Td (Recommended manual test order) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 476.89 Td (1. Check health, then log in as the bootstrapped owner.) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 464.89 Td (2. Create an academic year, term, class level, subject, and section.) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 452.89 Td (3. Add the subject to the class curriculum, then to the section.) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 440.89 Td (4. Create teacher accounts and assignments.) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 428.89 Td (5. Create a student and parent account, create/link a guardian, then enroll the student.) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 416.89 Td (6. Try scoped reads with teacher, parent, and student accounts. Use disposable local records for) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 404.89 Td (close/end operations.) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 385.89 Td (Create the first owner interactively, if not already done: corepack pnpm --filter @schoolerp/api) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 373.89 Td (bootstrap:owner.) Tj ET
+0.12 0.32 0.52 rg 48.00 352.89 2 14 re f
+BT /F2 14 Tf 0.12 0.15 0.19 rg 56.00 354.89 Td (Health) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 327.89 Td (These endpoints are public and have no request body.) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 308.89 Td (Method  |  Endpoint  |  Purpose) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 296.89 Td (GET  |  /health  |  API status and uptime) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 284.89 Td (GET  |  /health/db  |  PostgreSQL connectivity) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 272.89 Td (GET  |  /health/redis  |  Redis connectivity) Tj ET
+0.12 0.32 0.52 rg 48.00 251.89 2 14 re f
+BT /F2 14 Tf 0.12 0.15 0.19 rg 56.00 253.89 Td (Authentication and user accounts) Tj ET
+0.12 0.32 0.52 rg 48.00 224.89 2 14 re f
+BT /F2 11 Tf 0.12 0.15 0.19 rg 56.00 226.89 Td (`POST /auth/login` Ч public) Tj ET
+0.95 0.96 0.97 rg 44.00 193.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 196.89 Td ({) Tj ET
+0.95 0.96 0.97 rg 44.00 182.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 185.89 Td (  "email": "owner@example.com",) Tj ET
+0.95 0.96 0.97 rg 44.00 171.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 174.89 Td (  "password": "Your-Local-Test-Password") Tj ET
+0.95 0.96 0.97 rg 44.00 160.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 163.89 Td (}) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 138.89 Td (Returns an access token, refresh token, and user details. Keep both tokens private.) Tj ET
+0.12 0.32 0.52 rg 48.00 117.89 2 14 re f
+BT /F2 11 Tf 0.12 0.15 0.19 rg 56.00 119.89 Td (`POST /auth/refresh` Ч public) Tj ET
+0.95 0.96 0.97 rg 44.00 86.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 89.89 Td ({) Tj ET
+BT /F1 8 Tf 0.4 0.4 0.4 rg 48 25 Td (SchoolERP API Reference  |  Page 1 of 8) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 5257 >>
+stream
+0.95 0.96 0.97 rg 44.00 786.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 789.89 Td (  "refreshToken": "<refreshToken returned by login>") Tj ET
+0.95 0.96 0.97 rg 44.00 775.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 778.89 Td (}) Tj ET
+0.12 0.32 0.52 rg 48.00 751.89 2 14 re f
+BT /F2 11 Tf 0.12 0.15 0.19 rg 56.00 753.89 Td (`GET /auth/me` Ч authenticated) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 730.89 Td (No body. Returns the current account, roles, and permissions.) Tj ET
+0.12 0.32 0.52 rg 48.00 709.89 2 14 re f
+BT /F2 11 Tf 0.12 0.15 0.19 rg 56.00 711.89 Td (`POST /auth/logout` Ч authenticated) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 688.89 Td (No body. Revokes the current session. The Authorization: Bearer <accessToken> header is required.) Tj ET
+0.12 0.32 0.52 rg 48.00 667.89 2 14 re f
+BT /F2 11 Tf 0.12 0.15 0.19 rg 56.00 669.89 Td (`POST /auth/change-password` Ч authenticated) Tj ET
+0.95 0.96 0.97 rg 44.00 636.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 639.89 Td ({) Tj ET
+0.95 0.96 0.97 rg 44.00 625.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 628.89 Td (  "currentPassword": "Your-Current-Test-Password",) Tj ET
+0.95 0.96 0.97 rg 44.00 614.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 617.89 Td (  "newPassword": "Your-New-Long-Test-Password") Tj ET
+0.95 0.96 0.97 rg 44.00 603.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 606.89 Td (}) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 581.89 Td (The new password must contain at least 12 characters. Existing sessions are revoked.) Tj ET
+0.12 0.32 0.52 rg 48.00 560.89 2 14 re f
+BT /F2 11 Tf 0.12 0.15 0.19 rg 56.00 562.89 Td (`GET /auth/users` Ч `user:manage`) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 539.89 Td (No body. Optional query: ?page=1&pageSize=25.) Tj ET
+0.12 0.32 0.52 rg 48.00 518.89 2 14 re f
+BT /F2 11 Tf 0.12 0.15 0.19 rg 56.00 520.89 Td (`POST /auth/users` Ч `user:manage`) Tj ET
+0.95 0.96 0.97 rg 44.00 487.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 490.89 Td ({) Tj ET
+0.95 0.96 0.97 rg 44.00 476.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 479.89 Td (  "email": "teacher@example.com",) Tj ET
+0.95 0.96 0.97 rg 44.00 465.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 468.89 Td (  "displayName": "Test Teacher",) Tj ET
+0.95 0.96 0.97 rg 44.00 454.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 457.89 Td (  "role": "TEACHER",) Tj ET
+0.95 0.96 0.97 rg 44.00 443.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 446.89 Td (  "initialPassword": "Use-A-Long-Test-Password") Tj ET
+0.95 0.96 0.97 rg 44.00 432.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 435.89 Td (}) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 410.89 Td (Valid roles: OWNER, PRINCIPAL, ADMIN, ADMISSIONS_OFFICER, ACCOUNTANT, TEACHER, PARENT, STUDENT,) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 398.89 Td (TRANSPORT_MANAGER. Only an owner can provision privileged owner/admin/principal accounts. Users must) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 386.89 Td (change their initial password according to the account workflow.) Tj ET
+0.12 0.32 0.52 rg 48.00 365.89 2 14 re f
+BT /F2 11 Tf 0.12 0.15 0.19 rg 56.00 367.89 Td (`PATCH /auth/users/{id}` Ч `user:manage`) Tj ET
+0.95 0.96 0.97 rg 44.00 334.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 337.89 Td ({) Tj ET
+0.95 0.96 0.97 rg 44.00 323.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 326.89 Td (  "role": "TEACHER",) Tj ET
+0.95 0.96 0.97 rg 44.00 312.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 315.89 Td (  "status": "ACTIVE") Tj ET
+0.95 0.96 0.97 rg 44.00 301.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 304.89 Td (}) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 279.89 Td (Both fields are optional. status must be a valid UserStatus value shown by the API's OpenAPI schema.) Tj ET
+0.12 0.32 0.52 rg 48.00 258.89 2 14 re f
+BT /F2 14 Tf 0.12 0.15 0.19 rg 56.00 260.89 Td (Academic years) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 233.89 Td (All routes require a bearer token. Reads require academic:read; writes require academic:write.) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 214.89 Td (Method  |  Endpoint  |  Body) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 202.89 Td (GET  |  /academic/years?page=1&pageSize=25  |  None) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 190.89 Td (POST  |  /academic/years  |  See create example below) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 178.89 Td (PATCH  |  /academic/years/{id}  |  Any editable fields from the create example) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 166.89 Td (POST  |  /academic/years/{id}/activate  |  None) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 154.89 Td (POST  |  /academic/years/{id}/close  |  None) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 135.89 Td (Create year:) Tj ET
+0.95 0.96 0.97 rg 44.00 106.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 109.89 Td ({) Tj ET
+0.95 0.96 0.97 rg 44.00 95.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 98.89 Td (  "code": "AY-2026",) Tj ET
+0.95 0.96 0.97 rg 44.00 84.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 87.89 Td (  "name": "Academic Year 2026-2027",) Tj ET
+BT /F1 8 Tf 0.4 0.4 0.4 rg 48 25 Td (SchoolERP API Reference  |  Page 2 of 8) Tj ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 8 0 R >>
+endobj
+10 0 obj
+<< /Length 5387 >>
+stream
+0.95 0.96 0.97 rg 44.00 786.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 789.89 Td (  "startsOn": "2026-06-01",) Tj ET
+0.95 0.96 0.97 rg 44.00 775.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 778.89 Td (  "endsOn": "2027-05-31") Tj ET
+0.95 0.96 0.97 rg 44.00 764.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 767.89 Td (}) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 742.89 Td (Only one academic year can be active at a time. Close the current active year before activating another) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 730.89 Td (one.) Tj ET
+0.12 0.32 0.52 rg 48.00 709.89 2 14 re f
+BT /F2 14 Tf 0.12 0.15 0.19 rg 56.00 711.89 Td (Terms) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 684.89 Td (Requires academic:read for reads and academic:write for writes.) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 665.89 Td (Method  |  Endpoint  |  Body) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 653.89 Td (GET  |  /academic/terms?academicYearId={yearId}&page=1&pageSize=25  |  None) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 641.89 Td (POST  |  /academic/terms  |  See create example below) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 629.89 Td (PATCH  |  /academic/terms/{id}  |  Any editable fields from the create example) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 610.89 Td (Create term:) Tj ET
+0.95 0.96 0.97 rg 44.00 581.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 584.89 Td ({) Tj ET
+0.95 0.96 0.97 rg 44.00 570.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 573.89 Td (  "academicYearId": "<academicYearId>",) Tj ET
+0.95 0.96 0.97 rg 44.00 559.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 562.89 Td (  "code": "TERM-1",) Tj ET
+0.95 0.96 0.97 rg 44.00 548.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 551.89 Td (  "name": "Term 1",) Tj ET
+0.95 0.96 0.97 rg 44.00 537.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 540.89 Td (  "sequence": 1,) Tj ET
+0.95 0.96 0.97 rg 44.00 526.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 529.89 Td (  "startsOn": "2026-06-01",) Tj ET
+0.95 0.96 0.97 rg 44.00 515.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 518.89 Td (  "endsOn": "2026-10-31") Tj ET
+0.95 0.96 0.97 rg 44.00 504.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 507.89 Td (}) Tj ET
+0.12 0.32 0.52 rg 48.00 480.89 2 14 re f
+BT /F2 14 Tf 0.12 0.15 0.19 rg 56.00 482.89 Td (Class levels) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 455.89 Td (Requires academic:read for reads and academic:write for writes.) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 436.89 Td (Method  |  Endpoint  |  Body) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 424.89 Td (GET  |  /academic/class-levels?page=1&pageSize=25  |  None) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 412.89 Td (POST  |  /academic/class-levels  |  See create example below) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 400.89 Td (PATCH  |  /academic/class-levels/{id}  |  Any editable fields from the create example) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 381.89 Td (Create class level:) Tj ET
+0.95 0.96 0.97 rg 44.00 352.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 355.89 Td ({) Tj ET
+0.95 0.96 0.97 rg 44.00 341.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 344.89 Td (  "code": "CLASS-5",) Tj ET
+0.95 0.96 0.97 rg 44.00 330.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 333.89 Td (  "name": "Class 5",) Tj ET
+0.95 0.96 0.97 rg 44.00 319.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 322.89 Td (  "sortOrder": 5,) Tj ET
+0.95 0.96 0.97 rg 44.00 308.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 311.89 Td (  "isActive": true) Tj ET
+0.95 0.96 0.97 rg 44.00 297.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 300.89 Td (}) Tj ET
+0.12 0.32 0.52 rg 48.00 273.89 2 14 re f
+BT /F2 14 Tf 0.12 0.15 0.19 rg 56.00 275.89 Td (Sections) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 248.89 Td (Requires academic:read for reads and academic:write for writes.) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 229.89 Td (Method  |  Endpoint  |  Body) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 217.89 Td (GET  |  /academic/sections?academicYearId={yearId}&classLevelId={classLevelId}&page=1&pageSize=25  |) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 205.89 Td (None; filters are optional) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 193.89 Td (POST  |  /academic/sections  |  See create example below) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 181.89 Td (PATCH  |  /academic/sections/{id}  |  Any editable fields from the create example; isActive may also be) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 169.89 Td (supplied) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 150.89 Td (Create section:) Tj ET
+0.95 0.96 0.97 rg 44.00 121.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 124.89 Td ({) Tj ET
+0.95 0.96 0.97 rg 44.00 110.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 113.89 Td (  "academicYearId": "<academicYearId>",) Tj ET
+0.95 0.96 0.97 rg 44.00 99.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 102.89 Td (  "classLevelId": "<classLevelId>",) Tj ET
+0.95 0.96 0.97 rg 44.00 88.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 91.89 Td (  "code": "A",) Tj ET
+0.95 0.96 0.97 rg 44.00 77.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 80.89 Td (  "name": "Class 5 - A",) Tj ET
+BT /F1 8 Tf 0.4 0.4 0.4 rg 48 25 Td (SchoolERP API Reference  |  Page 3 of 8) Tj ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 10 0 R >>
+endobj
+12 0 obj
+<< /Length 5217 >>
+stream
+0.95 0.96 0.97 rg 44.00 786.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 789.89 Td (  "capacity": 40) Tj ET
+0.95 0.96 0.97 rg 44.00 775.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 778.89 Td (}) Tj ET
+0.12 0.32 0.52 rg 48.00 751.89 2 14 re f
+BT /F2 14 Tf 0.12 0.15 0.19 rg 56.00 753.89 Td (Subjects and curriculum) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 726.89 Td (Requires academic:read for reads and academic:write for writes.) Tj ET
+0.12 0.32 0.52 rg 48.00 705.89 2 14 re f
+BT /F2 11 Tf 0.12 0.15 0.19 rg 56.00 707.89 Td (Subjects) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 684.89 Td (Method  |  Endpoint  |  Body) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 672.89 Td (GET  |  /academic/subjects?page=1&pageSize=25  |  None) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 660.89 Td (POST  |  /academic/subjects  |  See create example below) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 648.89 Td (PATCH  |  /academic/subjects/{id}  |  Any editable fields from the create example) Tj ET
+0.95 0.96 0.97 rg 44.00 619.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 622.89 Td ({) Tj ET
+0.95 0.96 0.97 rg 44.00 608.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 611.89 Td (  "code": "MATH",) Tj ET
+0.95 0.96 0.97 rg 44.00 597.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 600.89 Td (  "name": "Mathematics",) Tj ET
+0.95 0.96 0.97 rg 44.00 586.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 589.89 Td (  "isActive": true) Tj ET
+0.95 0.96 0.97 rg 44.00 575.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 578.89 Td (}) Tj ET
+0.12 0.32 0.52 rg 48.00 551.89 2 14 re f
+BT /F2 11 Tf 0.12 0.15 0.19 rg 56.00 553.89 Td (Class curriculum subjects) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 530.89 Td (Method  |  Endpoint  |  Body) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 518.89 Td (GET  |  /academic/years/{yearId}/class-levels/{classLevelId}/subjects  |  None) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 506.89 Td (POST  |  /academic/years/{yearId}/class-levels/{classLevelId}/subjects  |  See example below) Tj ET
+0.95 0.96 0.97 rg 44.00 477.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 480.89 Td ({) Tj ET
+0.95 0.96 0.97 rg 44.00 466.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 469.89 Td (  "subjectId": "<subjectId>",) Tj ET
+0.95 0.96 0.97 rg 44.00 455.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 458.89 Td (  "isRequired": true,) Tj ET
+0.95 0.96 0.97 rg 44.00 444.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 447.89 Td (  "sequence": 1) Tj ET
+0.95 0.96 0.97 rg 44.00 433.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 436.89 Td (}) Tj ET
+0.12 0.32 0.52 rg 48.00 409.89 2 14 re f
+BT /F2 11 Tf 0.12 0.15 0.19 rg 56.00 411.89 Td (Subjects offered in a section) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 388.89 Td (Method  |  Endpoint  |  Body) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 376.89 Td (GET  |  /academic/sections/{sectionId}/subjects  |  None) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 364.89 Td (POST  |  /academic/sections/{sectionId}/subjects  |  See example below) Tj ET
+0.95 0.96 0.97 rg 44.00 335.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 338.89 Td ({) Tj ET
+0.95 0.96 0.97 rg 44.00 324.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 327.89 Td (  "classSubjectId": "<classSubjectId returned by the curriculum endpoint>") Tj ET
+0.95 0.96 0.97 rg 44.00 313.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 316.89 Td (}) Tj ET
+0.12 0.32 0.52 rg 48.00 289.89 2 14 re f
+BT /F2 14 Tf 0.12 0.15 0.19 rg 56.00 291.89 Td (Teacher assignments) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 264.89 Td (Requires academic:read for reads and academic:write for writes. The teacher account must be active and) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 252.89 Td (have the TEACHER role. Teacher reads are limited to their own current assignments in the active academic) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 240.89 Td (year.) Tj ET
+0.12 0.32 0.52 rg 48.00 219.89 2 14 re f
+BT /F2 11 Tf 0.12 0.15 0.19 rg 56.00 221.89 Td (Subject teacher assignments) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 198.89 Td (Method  |  Endpoint  |  Body) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 186.89 Td (GET  |  /academic/teacher-assignments?page=1&pageSize=25&teacherUserId={userId}&academicYearId={yearId}) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 174.89 Td (|  None; filters are optional) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 162.89 Td (POST  |  /academic/teacher-assignments  |  See create example below) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 150.89 Td (PATCH  |  /academic/teacher-assignments/{id}/end  |  See end example below) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 131.89 Td (Create assignment:) Tj ET
+0.95 0.96 0.97 rg 44.00 102.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 105.89 Td ({) Tj ET
+0.95 0.96 0.97 rg 44.00 91.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 94.89 Td (  "sectionSubjectId": "<sectionSubjectId>",) Tj ET
+0.95 0.96 0.97 rg 44.00 80.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 83.89 Td (  "teacherUserId": "<teacherUserId>",) Tj ET
+BT /F1 8 Tf 0.4 0.4 0.4 rg 48 25 Td (SchoolERP API Reference  |  Page 4 of 8) Tj ET
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 12 0 R >>
+endobj
+14 0 obj
+<< /Length 5582 >>
+stream
+0.95 0.96 0.97 rg 44.00 786.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 789.89 Td (  "startsOn": "2026-06-01",) Tj ET
+0.95 0.96 0.97 rg 44.00 775.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 778.89 Td (  "endsOn": null) Tj ET
+0.95 0.96 0.97 rg 44.00 764.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 767.89 Td (}) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 742.89 Td (End assignment:) Tj ET
+0.95 0.96 0.97 rg 44.00 713.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 716.89 Td ({) Tj ET
+0.95 0.96 0.97 rg 44.00 702.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 705.89 Td (  "endsOn": "2026-10-31") Tj ET
+0.95 0.96 0.97 rg 44.00 691.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 694.89 Td (}) Tj ET
+0.12 0.32 0.52 rg 48.00 667.89 2 14 re f
+BT /F2 11 Tf 0.12 0.15 0.19 rg 56.00 669.89 Td (Class teacher assignments) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 646.89 Td (Method  |  Endpoint  |  Body) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 634.89 Td (GET  |) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 622.89 Td (/academic/class-teacher-assignments?page=1&pageSize=25&teacherUserId={userId}&academicYearId={yearId}  |) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 610.89 Td (None; filters are optional) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 598.89 Td (POST  |  /academic/class-teacher-assignments  |  See create example below) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 586.89 Td (PATCH  |  /academic/class-teacher-assignments/{id}/end  |  Same end example above) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 567.89 Td (Create class teacher assignment:) Tj ET
+0.95 0.96 0.97 rg 44.00 538.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 541.89 Td ({) Tj ET
+0.95 0.96 0.97 rg 44.00 527.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 530.89 Td (  "sectionId": "<sectionId>",) Tj ET
+0.95 0.96 0.97 rg 44.00 516.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 519.89 Td (  "teacherUserId": "<teacherUserId>",) Tj ET
+0.95 0.96 0.97 rg 44.00 505.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 508.89 Td (  "startsOn": "2026-06-01",) Tj ET
+0.95 0.96 0.97 rg 44.00 494.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 497.89 Td (  "endsOn": null,) Tj ET
+0.95 0.96 0.97 rg 44.00 483.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 486.89 Td (  "reason": "Assigned for the current academic year") Tj ET
+0.95 0.96 0.97 rg 44.00 472.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 475.89 Td (}) Tj ET
+0.12 0.32 0.52 rg 48.00 448.89 2 14 re f
+BT /F2 14 Tf 0.12 0.15 0.19 rg 56.00 450.89 Td (Students and guardians) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 423.89 Td (Student routes require a bearer token. Student reads require student:read; student and guardian writes) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 411.89 Td (require student:write. Staff can manage student records; teacher, parent, and student reads are) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 399.89 Td (relationship-scoped. Guardian contact reads are restricted to authorized staff.) Tj ET
+0.12 0.32 0.52 rg 48.00 378.89 2 14 re f
+BT /F2 11 Tf 0.12 0.15 0.19 rg 56.00 380.89 Td (Students) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 357.89 Td (Method  |  Endpoint  |  Body) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 345.89 Td (GET  |  /students?page=1&pageSize=25&search=riya&academicYearId={yearId}&sectionId={sectionId}  |  None;) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 333.89 Td (filters are optional) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 321.89 Td (GET  |  /students/family-portal-accounts  |  None; lists active parent accounts available for linking a) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 309.89 Td (sibling) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 297.89 Td (GET  |  /students/{id}  |  None) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 285.89 Td (GET  |  /students/{id}/enrollments  |  None) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 273.89 Td (POST  |  /students  |  See create example below) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 261.89 Td (PATCH  |  /students/{id}  |  Any of firstName, lastName, dateOfBirth; studentNumber cannot be changed) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 249.89 Td (PATCH  |  /students/{id}/link-account  |  See account-link example below) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 230.89 Td (Create student:) Tj ET
+0.95 0.96 0.97 rg 44.00 201.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 204.89 Td ({) Tj ET
+0.95 0.96 0.97 rg 44.00 190.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 193.89 Td (  "studentNumber": "STU-2026-001",) Tj ET
+0.95 0.96 0.97 rg 44.00 179.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 182.89 Td (  "firstName": "Riya",) Tj ET
+0.95 0.96 0.97 rg 44.00 168.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 171.89 Td (  "lastName": "Sharma",) Tj ET
+0.95 0.96 0.97 rg 44.00 157.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 160.89 Td (  "dateOfBirth": "2016-08-14") Tj ET
+0.95 0.96 0.97 rg 44.00 146.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 149.89 Td (}) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 124.89 Td (Create a student and a parent/guardian family login in one transaction. The login has the PARENT role and) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 112.89 Td (opens the Parent dashboard for the linked child. Use this same family account for siblings by choosing) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 100.89 Td (LINK_EXISTING and the existing parent userId.) Tj ET
+BT /F1 8 Tf 0.4 0.4 0.4 rg 48 25 Td (SchoolERP API Reference  |  Page 5 of 8) Tj ET
+endstream
+endobj
+15 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 14 0 R >>
+endobj
+16 0 obj
+<< /Length 6177 >>
+stream
+0.95 0.96 0.97 rg 44.00 786.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 789.89 Td ({) Tj ET
+0.95 0.96 0.97 rg 44.00 775.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 778.89 Td (  "studentNumber": "STU-2026-002",) Tj ET
+0.95 0.96 0.97 rg 44.00 764.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 767.89 Td (  "firstName": "Aarav",) Tj ET
+0.95 0.96 0.97 rg 44.00 753.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 756.89 Td (  "lastName": "Sharma",) Tj ET
+0.95 0.96 0.97 rg 44.00 742.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 745.89 Td (  "dateOfBirth": "2020-08-14",) Tj ET
+0.95 0.96 0.97 rg 44.00 731.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 734.89 Td (  "familyPortal": {) Tj ET
+0.95 0.96 0.97 rg 44.00 720.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 723.89 Td (    "action": "CREATE",) Tj ET
+0.95 0.96 0.97 rg 44.00 709.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 712.89 Td (    "guardianFirstName": "Amit",) Tj ET
+0.95 0.96 0.97 rg 44.00 698.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 701.89 Td (    "guardianLastName": "Sharma",) Tj ET
+0.95 0.96 0.97 rg 44.00 687.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 690.89 Td (    "relationship": "Father",) Tj ET
+0.95 0.96 0.97 rg 44.00 676.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 679.89 Td (    "email": "amit.sharma@example.com",) Tj ET
+0.95 0.96 0.97 rg 44.00 665.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 668.89 Td (    "phone": "+91 9876543210",) Tj ET
+0.95 0.96 0.97 rg 44.00 654.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 657.89 Td (    "initialPassword": "Use-A-Long-Test-Password") Tj ET
+0.95 0.96 0.97 rg 44.00 643.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 646.89 Td (  }) Tj ET
+0.95 0.96 0.97 rg 44.00 632.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 635.89 Td (}) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 610.89 Td (Link another child to an existing family login:) Tj ET
+0.95 0.96 0.97 rg 44.00 581.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 584.89 Td ({) Tj ET
+0.95 0.96 0.97 rg 44.00 570.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 573.89 Td (  "studentNumber": "STU-2026-003",) Tj ET
+0.95 0.96 0.97 rg 44.00 559.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 562.89 Td (  "firstName": "Anaya",) Tj ET
+0.95 0.96 0.97 rg 44.00 548.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 551.89 Td (  "lastName": "Sharma",) Tj ET
+0.95 0.96 0.97 rg 44.00 537.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 540.89 Td (  "familyPortal": {) Tj ET
+0.95 0.96 0.97 rg 44.00 526.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 529.89 Td (    "action": "LINK_EXISTING",) Tj ET
+0.95 0.96 0.97 rg 44.00 515.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 518.89 Td (    "relationship": "Mother",) Tj ET
+0.95 0.96 0.97 rg 44.00 504.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 507.89 Td (    "userId": "<existing parent account userId>") Tj ET
+0.95 0.96 0.97 rg 44.00 493.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 496.89 Td (  }) Tj ET
+0.95 0.96 0.97 rg 44.00 482.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 485.89 Td (}) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 460.89 Td (Student creation, guardian linking, and new parent account creation commit or roll back together. New) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 448.89 Td (family accounts must change their initial password on first sign-in.) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 429.89 Td (Update student:) Tj ET
+0.95 0.96 0.97 rg 44.00 400.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 403.89 Td ({) Tj ET
+0.95 0.96 0.97 rg 44.00 389.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 392.89 Td (  "lastName": "Verma",) Tj ET
+0.95 0.96 0.97 rg 44.00 378.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 381.89 Td (  "dateOfBirth": "2016-08-14") Tj ET
+0.95 0.96 0.97 rg 44.00 367.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 370.89 Td (}) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 345.89 Td (Link student login account:) Tj ET
+0.95 0.96 0.97 rg 44.00 316.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 319.89 Td ({) Tj ET
+0.95 0.96 0.97 rg 44.00 305.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 308.89 Td (  "userId": "<active userId with the STUDENT role>") Tj ET
+0.95 0.96 0.97 rg 44.00 294.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 297.89 Td (}) Tj ET
+0.12 0.32 0.52 rg 48.00 270.89 2 14 re f
+BT /F2 11 Tf 0.12 0.15 0.19 rg 56.00 272.89 Td (Guardians) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 249.89 Td (Method  |  Endpoint  |  Body) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 237.89 Td (GET  |  /students/{studentId}/guardians  |  None) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 225.89 Td (POST  |  /students/{studentId}/guardians  |  See create-and-link example below) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 213.89 Td (PATCH  |  /guardians/{guardianId}/link-account  |  See account-link example below) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 194.89 Td (Create guardian and link to student:) Tj ET
+0.95 0.96 0.97 rg 44.00 165.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 168.89 Td ({) Tj ET
+0.95 0.96 0.97 rg 44.00 154.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 157.89 Td (  "firstName": "Amit",) Tj ET
+0.95 0.96 0.97 rg 44.00 143.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 146.89 Td (  "lastName": "Sharma",) Tj ET
+0.95 0.96 0.97 rg 44.00 132.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 135.89 Td (  "email": "amit.sharma@example.com",) Tj ET
+0.95 0.96 0.97 rg 44.00 121.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 124.89 Td (  "phone": "+91 9876543210",) Tj ET
+0.95 0.96 0.97 rg 44.00 110.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 113.89 Td (  "relationship": "Father",) Tj ET
+0.95 0.96 0.97 rg 44.00 99.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 102.89 Td (  "isPrimaryContact": true) Tj ET
+0.95 0.96 0.97 rg 44.00 88.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 91.89 Td (}) Tj ET
+BT /F1 8 Tf 0.4 0.4 0.4 rg 48 25 Td (SchoolERP API Reference  |  Page 6 of 8) Tj ET
+endstream
+endobj
+17 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 16 0 R >>
+endobj
+18 0 obj
+<< /Length 5111 >>
+stream
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 782.89 Td (Link guardian login account \(the user must have the PARENT role\):) Tj ET
+0.95 0.96 0.97 rg 44.00 753.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 756.89 Td ({) Tj ET
+0.95 0.96 0.97 rg 44.00 742.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 745.89 Td (  "userId": "<active userId with the PARENT role>") Tj ET
+0.95 0.96 0.97 rg 44.00 731.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 734.89 Td (}) Tj ET
+0.12 0.32 0.52 rg 48.00 707.89 2 14 re f
+BT /F2 14 Tf 0.12 0.15 0.19 rg 56.00 709.89 Td (Enrollments and section placements) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 682.89 Td (All routes require student:write and a bearer token. Use a valid student, academic year, and section.) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 670.89 Td (Enrollment and placement changes are audited; use disposable records for close/transfer testing.) Tj ET
+0.12 0.32 0.52 rg 48.00 649.89 2 14 re f
+BT /F2 11 Tf 0.12 0.15 0.19 rg 56.00 651.89 Td (Create enrollment) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 628.89 Td (POST /students/{studentId}/enrollments) Tj ET
+0.95 0.96 0.97 rg 44.00 599.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 602.89 Td ({) Tj ET
+0.95 0.96 0.97 rg 44.00 588.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 591.89 Td (  "academicYearId": "<academicYearId>",) Tj ET
+0.95 0.96 0.97 rg 44.00 577.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 580.89 Td (  "sectionId": "<sectionId>",) Tj ET
+0.95 0.96 0.97 rg 44.00 566.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 569.89 Td (  "enrollmentDate": "2026-06-01") Tj ET
+0.95 0.96 0.97 rg 44.00 555.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 558.89 Td (}) Tj ET
+0.12 0.32 0.52 rg 48.00 531.89 2 14 re f
+BT /F2 11 Tf 0.12 0.15 0.19 rg 56.00 533.89 Td (Add a placement / section transfer) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 510.89 Td (POST /enrollments/{enrollmentId}/placements) Tj ET
+0.95 0.96 0.97 rg 44.00 481.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 484.89 Td ({) Tj ET
+0.95 0.96 0.97 rg 44.00 470.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 473.89 Td (  "sectionId": "<destinationSectionId>",) Tj ET
+0.95 0.96 0.97 rg 44.00 459.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 462.89 Td (  "startsOn": "2026-09-01",) Tj ET
+0.95 0.96 0.97 rg 44.00 448.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 451.89 Td (  "reason": "Moved to another section") Tj ET
+0.95 0.96 0.97 rg 44.00 437.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 440.89 Td (}) Tj ET
+0.12 0.32 0.52 rg 48.00 413.89 2 14 re f
+BT /F2 11 Tf 0.12 0.15 0.19 rg 56.00 415.89 Td (Close enrollment) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 392.89 Td (POST /enrollments/{enrollmentId}/close) Tj ET
+0.95 0.96 0.97 rg 44.00 363.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 366.89 Td ({) Tj ET
+0.95 0.96 0.97 rg 44.00 352.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 355.89 Td (  "status": "COMPLETED",) Tj ET
+0.95 0.96 0.97 rg 44.00 341.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 344.89 Td (  "exitDate": "2027-05-31") Tj ET
+0.95 0.96 0.97 rg 44.00 330.89 507.28 12 re f
+BT /F3 8 Tf 0.12 0.15 0.19 rg 52.00 333.89 Td (}) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 308.89 Td (Allowed close statuses: COMPLETED, WITHDRAWN, TRANSFERRED.) Tj ET
+0.12 0.32 0.52 rg 48.00 287.89 2 14 re f
+BT /F2 14 Tf 0.12 0.15 0.19 rg 56.00 289.89 Td (Common manual checks) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 262.89 Td (Х A protected endpoint without a token should return 401 Unauthorized.) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 250.89 Td (Х A valid account without the required permission should return 403 Forbidden.) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 238.89 Td (Х Invalid JSON, UUIDs, dates, or extra properties should be rejected by validation.) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 226.89 Td (Х Duplicate business codes/numbers and conflicting effective date ranges should be rejected.) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 214.89 Td (Х Teacher, parent, and student accounts should only see records allowed by their active assignments or) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 202.89 Td (linked relationships.) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 190.89 Td (Х There are no physical-delete endpoints in this API slice. Use the documented lifecycle actions.) Tj ET
+0.12 0.32 0.52 rg 48.00 169.89 2 14 re f
+BT /F2 14 Tf 0.12 0.15 0.19 rg 56.00 171.89 Td (Route inventory) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 144.89 Td (All paths below are relative to /api/v1. Auth means bearer authentication is required; permission names) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 132.89 Td (are listed where applicable.) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 113.89 Td (Method  |  Route  |  Access) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 101.89 Td (GET  |  /health  |  Public) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 89.89 Td (GET  |  /health/db  |  Public) Tj ET
+BT /F1 8 Tf 0.4 0.4 0.4 rg 48 25 Td (SchoolERP API Reference  |  Page 7 of 8) Tj ET
+endstream
+endobj
+19 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 18 0 R >>
+endobj
+20 0 obj
+<< /Length 5214 >>
+stream
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 789.89 Td (GET  |  /health/redis  |  Public) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 777.89 Td (POST  |  /auth/login  |  Public) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 765.89 Td (POST  |  /auth/refresh  |  Public) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 753.89 Td (GET  |  /auth/me  |  Auth) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 741.89 Td (POST  |  /auth/logout  |  Auth) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 729.89 Td (POST  |  /auth/change-password  |  Auth) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 717.89 Td (GET  |  /auth/users  |  user:manage) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 705.89 Td (POST  |  /auth/users  |  user:manage) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 693.89 Td (PATCH  |  /auth/users/{id}  |  user:manage) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 681.89 Td (GET  |  /academic/years  |  academic:read) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 669.89 Td (POST  |  /academic/years  |  academic:write) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 657.89 Td (PATCH  |  /academic/years/{id}  |  academic:write) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 645.89 Td (POST  |  /academic/years/{id}/activate  |  academic:write) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 633.89 Td (POST  |  /academic/years/{id}/close  |  academic:write) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 621.89 Td (GET  |  /academic/terms  |  academic:read) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 609.89 Td (POST  |  /academic/terms  |  academic:write) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 597.89 Td (PATCH  |  /academic/terms/{id}  |  academic:write) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 585.89 Td (GET  |  /academic/class-levels  |  academic:read) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 573.89 Td (POST  |  /academic/class-levels  |  academic:write) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 561.89 Td (PATCH  |  /academic/class-levels/{id}  |  academic:write) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 549.89 Td (GET  |  /academic/sections  |  academic:read) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 537.89 Td (POST  |  /academic/sections  |  academic:write) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 525.89 Td (PATCH  |  /academic/sections/{id}  |  academic:write) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 513.89 Td (GET  |  /academic/subjects  |  academic:read) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 501.89 Td (POST  |  /academic/subjects  |  academic:write) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 489.89 Td (PATCH  |  /academic/subjects/{id}  |  academic:write) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 477.89 Td (GET  |  /academic/years/{yearId}/class-levels/{classLevelId}/subjects  |  academic:read) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 465.89 Td (POST  |  /academic/years/{yearId}/class-levels/{classLevelId}/subjects  |  academic:write) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 453.89 Td (GET  |  /academic/sections/{sectionId}/subjects  |  academic:read) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 441.89 Td (POST  |  /academic/sections/{sectionId}/subjects  |  academic:write) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 429.89 Td (GET  |  /academic/teacher-assignments  |  academic:read) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 417.89 Td (POST  |  /academic/teacher-assignments  |  academic:write) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 405.89 Td (PATCH  |  /academic/teacher-assignments/{id}/end  |  academic:write) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 393.89 Td (GET  |  /academic/class-teacher-assignments  |  academic:read) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 381.89 Td (POST  |  /academic/class-teacher-assignments  |  academic:write) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 369.89 Td (PATCH  |  /academic/class-teacher-assignments/{id}/end  |  academic:write) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 357.89 Td (GET  |  /students  |  student:read) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 345.89 Td (GET  |  /students/{id}  |  student:read) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 333.89 Td (GET  |  /students/{id}/enrollments  |  student:read) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 321.89 Td (POST  |  /students  |  student:write) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 309.89 Td (PATCH  |  /students/{id}  |  student:write) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 297.89 Td (PATCH  |  /students/{id}/link-account  |  student:write) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 285.89 Td (GET  |  /students/{id}/guardians  |  student:write) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 273.89 Td (POST  |  /students/{id}/guardians  |  student:write) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 261.89 Td (POST  |  /students/{id}/enrollments  |  student:write) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 249.89 Td (PATCH  |  /guardians/{id}/link-account  |  student:write) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 237.89 Td (POST  |  /enrollments/{enrollmentId}/placements  |  student:write) Tj ET
+BT /F1 8.5 Tf 0.12 0.15 0.19 rg 48.00 225.89 Td (POST  |  /enrollments/{enrollmentId}/close  |  student:write) Tj ET
+BT /F1 8 Tf 0.4 0.4 0.4 rg 48 25 Td (SchoolERP API Reference  |  Page 8 of 8) Tj ET
+endstream
+endobj
+21 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 20 0 R >>
+endobj
+xref
+0 22
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000169 00000 n 
+0000000266 00000 n 
+0000000368 00000 n 
+0000000463 00000 n 
+0000005793 00000 n 
+0000005945 00000 n 
+0000011253 00000 n 
+0000011405 00000 n 
+0000016844 00000 n 
+0000016998 00000 n 
+0000022267 00000 n 
+0000022421 00000 n 
+0000028055 00000 n 
+0000028209 00000 n 
+0000034438 00000 n 
+0000034592 00000 n 
+0000039755 00000 n 
+0000039909 00000 n 
+0000045175 00000 n 
+trailer
+<< /Size 22 /Root 1 0 R >>
+startxref
+45329
+%%EOF

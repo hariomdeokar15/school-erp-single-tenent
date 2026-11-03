@@ -1,10 +1,13 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
+import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "./AuthContext";
+import { isApiUnavailableError } from "../../lib/api-client";
 
 export function SignInPage() {
   const { t } = useTranslation();
+  const location = useLocation();
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,8 +20,12 @@ export function SignInPage() {
     setError("");
     try {
       await login(email, password);
-    } catch {
-      setError(t("authFailed"));
+    } catch (loginError) {
+      setError(
+        isApiUnavailableError(loginError)
+          ? t("apiUnavailable")
+          : t("authFailed"),
+      );
     } finally {
       setLoading(false);
     }
@@ -66,6 +73,11 @@ export function SignInPage() {
         {error && (
           <p role="alert" className="text-sm text-red-700 mb-4">
             {error}
+          </p>
+        )}
+        {location.state?.passwordChanged && (
+          <p role="status" className="mb-4 text-sm text-emerald-700">
+            {t("passwordChanged")}
           </p>
         )}
         <button

@@ -16,17 +16,19 @@
 
 These are initial broad M0 grants for review. A permission is not a substitute for object scope: module services must constrain records to linked children, assigned classes/subjects, or the user's own records.
 
-| Role                    | Initial permissions                                |
-| ----------------------- | -------------------------------------------------- |
-| Owner, principal, admin | All currently defined permissions                  |
-| Admissions officer      | Admission read/write and student read/write        |
-| Accountant              | Fee read/write                                     |
-| Teacher                 | Academic read, student read, attendance read/write |
-| Parent                  | Student read, attendance read, fee read            |
-| Student                 | Academic read, attendance read                     |
-| Transport manager       | Student read, transport read/write                 |
+| Role                    | Initial permissions                                     |
+| ----------------------- | ------------------------------------------------------- |
+| Owner, principal, admin | All currently defined permissions                       |
+| Admissions officer      | Admission read/write and student read/write             |
+| Accountant              | Fee read/write                                          |
+| Teacher                 | Academic read, student read, attendance read/write      |
+| Parent                  | Student read, attendance read, fee read                 |
+| Student                 | Academic read, own student record read, attendance read |
+| Transport manager       | Student read, transport read/write                      |
 
 Only an owner can provision owner, principal, or admin accounts. Other account creation requires `user:manage`.
+
+The M2 student record read permission is relationship-scoped in the API: a student account can read only its own linked record, a parent account can read only linked children, and a teacher account can read only students in currently assigned sections/subjects. A role permission by itself does not grant school-wide student access.
 
 ## API
 

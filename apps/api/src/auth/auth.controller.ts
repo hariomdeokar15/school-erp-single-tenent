@@ -9,6 +9,7 @@ import {
   Query,
   Req,
 } from "@nestjs/common";
+import { ApiBearerAuth } from "@nestjs/swagger";
 import { Permission } from "@schoolerp/contracts";
 import { Request } from "express";
 import {
@@ -52,6 +53,7 @@ export class AuthController {
   }
 
   @Authenticated()
+  @ApiBearerAuth()
   @Get("me")
   currentUser(@CurrentUser() user: AuthenticatedUser) {
     return {
@@ -65,6 +67,7 @@ export class AuthController {
   }
 
   @Authenticated()
+  @ApiBearerAuth()
   @Post("logout")
   async logout(
     @CurrentUser() user: AuthenticatedUser,
@@ -79,6 +82,7 @@ export class AuthController {
   }
 
   @Authenticated()
+  @ApiBearerAuth()
   @Post("change-password")
   async changePassword(
     @CurrentUser() user: AuthenticatedUser,
@@ -95,12 +99,14 @@ export class AuthController {
   }
 
   @RequirePermissions(Permission.USER_MANAGE)
+  @ApiBearerAuth()
   @Get("users")
   listUsers(@Query() query: ListUsersDto) {
     return this.auth.listUsers(query.page, query.pageSize);
   }
 
   @RequirePermissions(Permission.USER_MANAGE)
+  @ApiBearerAuth()
   @Post("users")
   createUser(
     @CurrentUser() actor: AuthenticatedUser,
@@ -111,6 +117,7 @@ export class AuthController {
   }
 
   @RequirePermissions(Permission.USER_MANAGE)
+  @ApiBearerAuth()
   @Patch("users/:id")
   updateUser(
     @Param("id", new ParseUUIDPipe()) userId: string,
