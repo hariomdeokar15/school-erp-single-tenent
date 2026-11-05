@@ -1,4 +1,5 @@
 import * as argon2 from "argon2";
+import { randomBytes } from "crypto";
 import { createInterface } from "readline/promises";
 import { stdin, stdout } from "process";
 import AppDataSource from "../database/data-source";
@@ -7,47 +8,12 @@ import { User, UserStatus } from "./entities/user.entity";
 import { UserRole } from "@schoolerp/contracts";
 import { AuditEvent } from "../audit/entities/audit-event.entity";
 
-async function askPassword(prompt: string): Promise<string> {
-  if (!stdin.isTTY || typeof stdin.setRawMode !== "function") {
+async function main() {
+  if (!stdin.isTTY || !stdout.isTTY) {
     throw new Error(
-      "Owner bootstrap requires an interactive terminal so the password is not echoed.",
+      "Owner bootstrap requires an interactive terminal to display the generated temporary password once.",
     );
   }
-  stdout.write(prompt);
-  stdin.setRawMode(true);
-  stdin.resume();
-  return new Promise((resolve, reject) => {
-    let password = "";
-    const onData = (chunk: Buffer) => {
-      for (const character of chunk.toString("utf8")) {
-        if (character === "\u0003") {
-          cleanup();
-          reject(new Error("Owner bootstrap cancelled."));
-          return;
-        }
-        if (character === "\r" || character === "\n") {
-          cleanup();
-          stdout.write("\n");
-          resolve(password);
-          return;
-        }
-        if (character === "\u007f" || character === "\b") {
-          password = password.slice(0, -1);
-        } else if (character >= " ") {
-          password += character;
-        }
-      }
-    };
-    const cleanup = () => {
-      stdin.off("data", onData);
-      stdin.setRawMode(false);
-      stdin.pause();
-    };
-    stdin.on("data", onData);
-  });
-}
-
-async function main() {
   const readline = createInterface({ input: stdin, output: stdout });
   try {
     const email = (await readline.question("Owner email: "))
@@ -57,17 +23,10 @@ async function main() {
       await readline.question("Owner display name: ")
     ).trim();
     readline.close();
-    const password = await askPassword("Owner password (12+ characters): ");
-    if (
-      !email.includes("@") ||
-      !displayName ||
-      password.length < 12 ||
-      password.length > 128
-    ) {
-      throw new Error(
-        "Provide a valid email, display name, and password between 12 and 128 characters.",
-      );
+    if (!email.includes("@") || !displayName) {
+      throw new Error("Provide a valid email and display name.");
     }
+    const temporaryPassword = randomBytes(24).toString("base64url");
 
     await AppDataSource.initialize();
     await AppDataSource.transaction(async (manager) => {
@@ -80,14 +39,14 @@ async function main() {
       const user = await manager.getRepository(User).save({
         email,
         displayName,
-        passwordHash: await argon2.hash(password, {
+        passwordHash: await argon2.hash(temporaryPassword, {
           type: argon2.argon2id,
           memoryCost: 19_456,
           timeCost: 2,
           parallelism: 1,
         }),
         status: UserStatus.ACTIVE,
-        mustChangePassword: false,
+        mustChangePassword: true,
       });
       await manager
         .getRepository(RoleAssignment)
@@ -102,7 +61,7 @@ async function main() {
       });
     });
     stdout.write(
-      "Owner account provisioned. Remove any temporary shell history and sign in through the web or mobile app.\n",
+      `Owner account provisioned for ${email}. Temporary password (shown once): ${temporaryPassword}\nChange it immediately after signing in.\n`,
     );
   } finally {
     readline.close();

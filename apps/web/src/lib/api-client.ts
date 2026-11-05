@@ -1,7 +1,25 @@
 import { env } from "./env";
 
+const SESSION_STORAGE_KEY = "schoolerp.auth.session";
+
+interface StoredSession {
+  refreshToken?: string;
+  user?: unknown;
+}
+
+function readStoredSession(): StoredSession | undefined {
+  if (typeof window === "undefined") return undefined;
+  try {
+    const value = window.sessionStorage.getItem(SESSION_STORAGE_KEY);
+    return value ? (JSON.parse(value) as StoredSession) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+let storedSession = readStoredSession();
 let accessToken: string | undefined;
-let refreshToken: string | undefined;
+let refreshToken: string | undefined = storedSession?.refreshToken;
 let refreshInFlight:
   Promise<{ accessToken: string; refreshToken: string } | null> | undefined;
 
@@ -30,9 +48,49 @@ export function isApiUnavailableError(error: unknown): boolean {
 export function setApiSession(tokens?: {
   accessToken: string;
   refreshToken: string;
+  user?: unknown;
 }) {
   accessToken = tokens?.accessToken;
   refreshToken = tokens?.refreshToken;
+  if (!tokens) {
+    storedSession = undefined;
+    try {
+      window.sessionStorage.removeItem(SESSION_STORAGE_KEY);
+    } catch {
+      // The in-memory session is still cleared if browser storage is unavailable.
+    }
+    return;
+  }
+
+  storedSession = {
+    refreshToken: tokens.refreshToken,
+    user: tokens.user ?? storedSession?.user,
+  };
+  try {
+    window.sessionStorage.setItem(
+      SESSION_STORAGE_KEY,
+      JSON.stringify(storedSession),
+    );
+  } catch {
+    // Keep the session usable for this page even when storage is unavailable.
+  }
+}
+
+export function getStoredSessionUser<T>(): T | undefined {
+  return storedSession?.user as T | undefined;
+}
+
+export function updateStoredSessionUser(user: unknown) {
+  if (!storedSession) return;
+  storedSession = { ...storedSession, user };
+  try {
+    window.sessionStorage.setItem(
+      SESSION_STORAGE_KEY,
+      JSON.stringify(storedSession),
+    );
+  } catch {
+    // Cached identity is optional; the current in-memory session remains usable.
+  }
 }
 
 async function rawFetch<T>(

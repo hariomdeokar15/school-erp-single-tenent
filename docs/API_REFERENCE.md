@@ -25,17 +25,17 @@ This reference documents the API routes currently implemented in the NestJS API.
 5. Create a student and parent account, create/link a guardian, then enroll the student.
 6. Try scoped reads with teacher, parent, and student accounts. Use disposable local records for close/end operations.
 
-Create the first owner interactively, if not already done: `corepack pnpm --filter @schoolerp/api bootstrap:owner`.
+Create the first owner interactively, if not already done: `corepack pnpm --filter @schoolerp/api bootstrap:owner`. The command displays a generated temporary password once; the owner must change it at first sign-in. Run it in a private terminal, not a recorded/shared session.
 
 ## Health
 
 These endpoints are public and have no request body.
 
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| `GET` | `/health` | API status and uptime |
-| `GET` | `/health/db` | PostgreSQL connectivity |
-| `GET` | `/health/redis` | Redis connectivity |
+| Method | Endpoint        | Purpose                 |
+| ------ | --------------- | ----------------------- |
+| `GET`  | `/health`       | API status and uptime   |
+| `GET`  | `/health/db`    | PostgreSQL connectivity |
+| `GET`  | `/health/redis` | Redis connectivity      |
 
 ## Authentication and user accounts
 
@@ -75,7 +75,7 @@ No body. Revokes the current session. The `Authorization: Bearer <accessToken>` 
 }
 ```
 
-The new password must contain at least 12 characters. Existing sessions are revoked.
+The new password must contain at least 8 characters. Existing sessions are revoked.
 
 ### `GET /auth/users` — `user:manage`
 
@@ -87,12 +87,11 @@ No body. Optional query: `?page=1&pageSize=25`.
 {
   "email": "teacher@example.com",
   "displayName": "Test Teacher",
-  "role": "TEACHER",
-  "initialPassword": "Use-A-Long-Test-Password"
+  "role": "TEACHER"
 }
 ```
 
-Valid roles: `OWNER`, `PRINCIPAL`, `ADMIN`, `ADMISSIONS_OFFICER`, `ACCOUNTANT`, `TEACHER`, `PARENT`, `STUDENT`, `TRANSPORT_MANAGER`. Only an owner can provision privileged owner/admin/principal accounts. Users must change their initial password according to the account workflow.
+Valid roles: `OWNER`, `PRINCIPAL`, `ADMIN`, `ADMISSIONS_OFFICER`, `ACCOUNTANT`, `TEACHER`, `PARENT`, `STUDENT`, `TRANSPORT_MANAGER`. Only an owner can provision privileged owner/admin/principal accounts. The API generates a cryptographically random temporary password and returns it once in the creation response; deliver it securely. The user must change it at first sign-in. New user-chosen passwords must contain at least 8 characters.
 
 ### `PATCH /auth/users/{id}` — `user:manage`
 
@@ -109,13 +108,13 @@ Both fields are optional. `status` must be a valid `UserStatus` value shown by t
 
 All routes require a bearer token. Reads require `academic:read`; writes require `academic:write`.
 
-| Method | Endpoint | Body |
-| --- | --- | --- |
-| `GET` | `/academic/years?page=1&pageSize=25` | None |
-| `POST` | `/academic/years` | See create example below |
-| `PATCH` | `/academic/years/{id}` | Any editable fields from the create example |
-| `POST` | `/academic/years/{id}/activate` | None |
-| `POST` | `/academic/years/{id}/close` | None |
+| Method  | Endpoint                             | Body                                        |
+| ------- | ------------------------------------ | ------------------------------------------- |
+| `GET`   | `/academic/years?page=1&pageSize=25` | None                                        |
+| `POST`  | `/academic/years`                    | See create example below                    |
+| `PATCH` | `/academic/years/{id}`               | Any editable fields from the create example |
+| `POST`  | `/academic/years/{id}/activate`      | None                                        |
+| `POST`  | `/academic/years/{id}/close`         | None                                        |
 
 Create year:
 
@@ -134,11 +133,11 @@ Only one academic year can be active at a time. Close the current active year be
 
 Requires `academic:read` for reads and `academic:write` for writes.
 
-| Method | Endpoint | Body |
-| --- | --- | --- |
-| `GET` | `/academic/terms?academicYearId={yearId}&page=1&pageSize=25` | None |
-| `POST` | `/academic/terms` | See create example below |
-| `PATCH` | `/academic/terms/{id}` | Any editable fields from the create example |
+| Method  | Endpoint                                                     | Body                                        |
+| ------- | ------------------------------------------------------------ | ------------------------------------------- |
+| `GET`   | `/academic/terms?academicYearId={yearId}&page=1&pageSize=25` | None                                        |
+| `POST`  | `/academic/terms`                                            | See create example below                    |
+| `PATCH` | `/academic/terms/{id}`                                       | Any editable fields from the create example |
 
 Create term:
 
@@ -157,11 +156,11 @@ Create term:
 
 Requires `academic:read` for reads and `academic:write` for writes.
 
-| Method | Endpoint | Body |
-| --- | --- | --- |
-| `GET` | `/academic/class-levels?page=1&pageSize=25` | None |
-| `POST` | `/academic/class-levels` | See create example below |
-| `PATCH` | `/academic/class-levels/{id}` | Any editable fields from the create example |
+| Method  | Endpoint                                    | Body                                        |
+| ------- | ------------------------------------------- | ------------------------------------------- |
+| `GET`   | `/academic/class-levels?page=1&pageSize=25` | None                                        |
+| `POST`  | `/academic/class-levels`                    | See create example below                    |
+| `PATCH` | `/academic/class-levels/{id}`               | Any editable fields from the create example |
 
 Create class level:
 
@@ -178,11 +177,11 @@ Create class level:
 
 Requires `academic:read` for reads and `academic:write` for writes.
 
-| Method | Endpoint | Body |
-| --- | --- | --- |
-| `GET` | `/academic/sections?academicYearId={yearId}&classLevelId={classLevelId}&page=1&pageSize=25` | None; filters are optional |
-| `POST` | `/academic/sections` | See create example below |
-| `PATCH` | `/academic/sections/{id}` | Any editable fields from the create example; `isActive` may also be supplied |
+| Method  | Endpoint                                                                                    | Body                                                                         |
+| ------- | ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `GET`   | `/academic/sections?academicYearId={yearId}&classLevelId={classLevelId}&page=1&pageSize=25` | None; filters are optional                                                   |
+| `POST`  | `/academic/sections`                                                                        | See create example below                                                     |
+| `PATCH` | `/academic/sections/{id}`                                                                   | Any editable fields from the create example; `isActive` may also be supplied |
 
 Create section:
 
@@ -202,11 +201,11 @@ Requires `academic:read` for reads and `academic:write` for writes.
 
 ### Subjects
 
-| Method | Endpoint | Body |
-| --- | --- | --- |
-| `GET` | `/academic/subjects?page=1&pageSize=25` | None |
-| `POST` | `/academic/subjects` | See create example below |
-| `PATCH` | `/academic/subjects/{id}` | Any editable fields from the create example |
+| Method  | Endpoint                                | Body                                        |
+| ------- | --------------------------------------- | ------------------------------------------- |
+| `GET`   | `/academic/subjects?page=1&pageSize=25` | None                                        |
+| `POST`  | `/academic/subjects`                    | See create example below                    |
+| `PATCH` | `/academic/subjects/{id}`               | Any editable fields from the create example |
 
 ```json
 {
@@ -218,9 +217,9 @@ Requires `academic:read` for reads and `academic:write` for writes.
 
 ### Class curriculum subjects
 
-| Method | Endpoint | Body |
-| --- | --- | --- |
-| `GET` | `/academic/years/{yearId}/class-levels/{classLevelId}/subjects` | None |
+| Method | Endpoint                                                        | Body              |
+| ------ | --------------------------------------------------------------- | ----------------- |
+| `GET`  | `/academic/years/{yearId}/class-levels/{classLevelId}/subjects` | None              |
 | `POST` | `/academic/years/{yearId}/class-levels/{classLevelId}/subjects` | See example below |
 
 ```json
@@ -233,9 +232,9 @@ Requires `academic:read` for reads and `academic:write` for writes.
 
 ### Subjects offered in a section
 
-| Method | Endpoint | Body |
-| --- | --- | --- |
-| `GET` | `/academic/sections/{sectionId}/subjects` | None |
+| Method | Endpoint                                  | Body              |
+| ------ | ----------------------------------------- | ----------------- |
+| `GET`  | `/academic/sections/{sectionId}/subjects` | None              |
 | `POST` | `/academic/sections/{sectionId}/subjects` | See example below |
 
 ```json
@@ -250,11 +249,11 @@ Requires `academic:read` for reads and `academic:write` for writes. The teacher 
 
 ### Subject teacher assignments
 
-| Method | Endpoint | Body |
-| --- | --- | --- |
-| `GET` | `/academic/teacher-assignments?page=1&pageSize=25&teacherUserId={userId}&academicYearId={yearId}` | None; filters are optional |
-| `POST` | `/academic/teacher-assignments` | See create example below |
-| `PATCH` | `/academic/teacher-assignments/{id}/end` | See end example below |
+| Method  | Endpoint                                                                                          | Body                       |
+| ------- | ------------------------------------------------------------------------------------------------- | -------------------------- |
+| `GET`   | `/academic/teacher-assignments?page=1&pageSize=25&teacherUserId={userId}&academicYearId={yearId}` | None; filters are optional |
+| `POST`  | `/academic/teacher-assignments`                                                                   | See create example below   |
+| `PATCH` | `/academic/teacher-assignments/{id}/end`                                                          | See end example below      |
 
 Create assignment:
 
@@ -277,11 +276,11 @@ End assignment:
 
 ### Class teacher assignments
 
-| Method | Endpoint | Body |
-| --- | --- | --- |
-| `GET` | `/academic/class-teacher-assignments?page=1&pageSize=25&teacherUserId={userId}&academicYearId={yearId}` | None; filters are optional |
-| `POST` | `/academic/class-teacher-assignments` | See create example below |
-| `PATCH` | `/academic/class-teacher-assignments/{id}/end` | Same end example above |
+| Method  | Endpoint                                                                                                | Body                       |
+| ------- | ------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `GET`   | `/academic/class-teacher-assignments?page=1&pageSize=25&teacherUserId={userId}&academicYearId={yearId}` | None; filters are optional |
+| `POST`  | `/academic/class-teacher-assignments`                                                                   | See create example below   |
+| `PATCH` | `/academic/class-teacher-assignments/{id}/end`                                                          | Same end example above     |
 
 Create class teacher assignment:
 
@@ -301,15 +300,18 @@ Student routes require a bearer token. Student reads require `student:read`; stu
 
 ### Students
 
-| Method | Endpoint | Body |
-| --- | --- | --- |
-| `GET` | `/students?page=1&pageSize=25&search=riya&academicYearId={yearId}&sectionId={sectionId}` | None; filters are optional |
-| `GET` | `/students/family-portal-accounts` | None; lists active parent accounts available for linking a sibling |
-| `GET` | `/students/{id}` | None |
-| `GET` | `/students/{id}/enrollments` | None |
-| `POST` | `/students` | See create example below |
-| `PATCH` | `/students/{id}` | Any of `firstName`, `lastName`, `dateOfBirth`; `studentNumber` cannot be changed |
-| `PATCH` | `/students/{id}/link-account` | See account-link example below |
+| Method  | Endpoint                                                                                 | Body                                                                             |
+| ------- | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `GET`   | `/students?page=1&pageSize=25&search=riya&academicYearId={yearId}&sectionId={sectionId}` | None; filters are optional                                                       |
+| `GET`   | `/students/family-portal-accounts`                                                       | None; lists active parent accounts available for linking a sibling               |
+| `GET`   | `/students/{id}`                                                                         | None                                                                             |
+| `GET`   | `/students/{id}/enrollments`                                                             | None                                                                             |
+| `POST`  | `/students`                                                                              | See create example below                                                         |
+| `PATCH` | `/students/{id}`                                                                         | Any of `firstName`, `lastName`, `dateOfBirth`; `studentNumber` cannot be changed |
+| `PATCH` | `/students/{id}/link-account`                                                            | See account-link example below                                                   |
+| `POST`  | `/students/{id}/archive`                                                                 | None; requires no `ENROLLED` enrollment                                          |
+| `POST`  | `/students/{id}/reactivate`                                                              | None                                                                             |
+| `POST`  | `/students/promotions`                                                                   | See batch promotion example below; owner, principal, or admin role required      |
 
 Create student:
 
@@ -336,8 +338,7 @@ Create a student and a parent/guardian family login in one transaction. The logi
     "guardianLastName": "Sharma",
     "relationship": "Father",
     "email": "amit.sharma@example.com",
-    "phone": "+91 9876543210",
-    "initialPassword": "Use-A-Long-Test-Password"
+    "phone": "+91 9876543210"
   }
 }
 ```
@@ -357,7 +358,31 @@ Link another child to an existing family login:
 }
 ```
 
-Student creation, guardian linking, and new parent account creation commit or roll back together. New family accounts must change their initial password on first sign-in.
+Student creation, guardian linking, and new parent account creation commit or roll back together. The API generates a cryptographically random temporary password for a new family account and returns it once in the creation response. Deliver it securely; the user must change it at first sign-in. Linking an existing family account does not generate or reveal a password.
+
+Archive a student without deleting their enrollment history:
+
+```http
+POST /students/{id}/archive
+```
+
+An active `ENROLLED` enrollment must be closed before archiving. Reactivate an archived record with `POST /students/{id}/reactivate`.
+
+Promote students from a closed source year. Every source enrollment must be `COMPLETED`; select one active target-year section per student. The batch is limited to 100 students. Each student is processed transactionally, failures are returned per student, and resubmitting a completed row returns `ALREADY_PROMOTED` without making a duplicate enrollment.
+
+```json
+{
+  "sourceAcademicYearId": "<closed-source-year-uuid>",
+  "targetAcademicYearId": "<later-open-year-uuid>",
+  "enrollmentDate": "2027-04-01",
+  "students": [
+    {
+      "studentId": "<student-uuid>",
+      "sectionId": "<active-target-section-uuid>"
+    }
+  ]
+}
+```
 
 Update student:
 
@@ -378,11 +403,24 @@ Link student login account:
 
 ### Guardians
 
-| Method | Endpoint | Body |
-| --- | --- | --- |
-| `GET` | `/students/{studentId}/guardians` | None |
-| `POST` | `/students/{studentId}/guardians` | See create-and-link example below |
-| `PATCH` | `/guardians/{guardianId}/link-account` | See account-link example below |
+| Method  | Endpoint                                       | Body                                                                             |
+| ------- | ---------------------------------------------- | -------------------------------------------------------------------------------- |
+| `GET`   | `/students/{studentId}/guardians`              | None                                                                             |
+| `POST`  | `/students/{studentId}/guardians`              | See create-and-link example below                                                |
+| `PATCH` | `/students/{studentId}/guardians/{linkId}`     | Relationship and/or primary-contact status                                       |
+| `POST`  | `/students/{studentId}/guardians/{linkId}/end` | None; retains relationship history and revokes this relationship's parent access |
+| `PATCH` | `/guardians/{guardianId}/link-account`         | See account-link example below                                                   |
+
+Update an existing guardian relationship:
+
+```json
+{
+  "relationship": "Mother",
+  "isPrimaryContact": true
+}
+```
+
+Ending a relationship records its end time. It does not delete the guardian or the historical link. The parent's student access is evaluated against active guardian relationships.
 
 Create guardian and link to student:
 
@@ -459,55 +497,55 @@ Allowed close statuses: `COMPLETED`, `WITHDRAWN`, `TRANSFERRED`.
 
 All paths below are relative to `/api/v1`. `Auth` means bearer authentication is required; permission names are listed where applicable.
 
-| Method | Route | Access |
-| --- | --- | --- |
-| GET | `/health` | Public |
-| GET | `/health/db` | Public |
-| GET | `/health/redis` | Public |
-| POST | `/auth/login` | Public |
-| POST | `/auth/refresh` | Public |
-| GET | `/auth/me` | Auth |
-| POST | `/auth/logout` | Auth |
-| POST | `/auth/change-password` | Auth |
-| GET | `/auth/users` | `user:manage` |
-| POST | `/auth/users` | `user:manage` |
-| PATCH | `/auth/users/{id}` | `user:manage` |
-| GET | `/academic/years` | `academic:read` |
-| POST | `/academic/years` | `academic:write` |
-| PATCH | `/academic/years/{id}` | `academic:write` |
-| POST | `/academic/years/{id}/activate` | `academic:write` |
-| POST | `/academic/years/{id}/close` | `academic:write` |
-| GET | `/academic/terms` | `academic:read` |
-| POST | `/academic/terms` | `academic:write` |
-| PATCH | `/academic/terms/{id}` | `academic:write` |
-| GET | `/academic/class-levels` | `academic:read` |
-| POST | `/academic/class-levels` | `academic:write` |
-| PATCH | `/academic/class-levels/{id}` | `academic:write` |
-| GET | `/academic/sections` | `academic:read` |
-| POST | `/academic/sections` | `academic:write` |
-| PATCH | `/academic/sections/{id}` | `academic:write` |
-| GET | `/academic/subjects` | `academic:read` |
-| POST | `/academic/subjects` | `academic:write` |
-| PATCH | `/academic/subjects/{id}` | `academic:write` |
-| GET | `/academic/years/{yearId}/class-levels/{classLevelId}/subjects` | `academic:read` |
-| POST | `/academic/years/{yearId}/class-levels/{classLevelId}/subjects` | `academic:write` |
-| GET | `/academic/sections/{sectionId}/subjects` | `academic:read` |
-| POST | `/academic/sections/{sectionId}/subjects` | `academic:write` |
-| GET | `/academic/teacher-assignments` | `academic:read` |
-| POST | `/academic/teacher-assignments` | `academic:write` |
-| PATCH | `/academic/teacher-assignments/{id}/end` | `academic:write` |
-| GET | `/academic/class-teacher-assignments` | `academic:read` |
-| POST | `/academic/class-teacher-assignments` | `academic:write` |
-| PATCH | `/academic/class-teacher-assignments/{id}/end` | `academic:write` |
-| GET | `/students` | `student:read` |
-| GET | `/students/{id}` | `student:read` |
-| GET | `/students/{id}/enrollments` | `student:read` |
-| POST | `/students` | `student:write` |
-| PATCH | `/students/{id}` | `student:write` |
-| PATCH | `/students/{id}/link-account` | `student:write` |
-| GET | `/students/{id}/guardians` | `student:write` |
-| POST | `/students/{id}/guardians` | `student:write` |
-| POST | `/students/{id}/enrollments` | `student:write` |
-| PATCH | `/guardians/{id}/link-account` | `student:write` |
-| POST | `/enrollments/{enrollmentId}/placements` | `student:write` |
-| POST | `/enrollments/{enrollmentId}/close` | `student:write` |
+| Method | Route                                                           | Access           |
+| ------ | --------------------------------------------------------------- | ---------------- |
+| GET    | `/health`                                                       | Public           |
+| GET    | `/health/db`                                                    | Public           |
+| GET    | `/health/redis`                                                 | Public           |
+| POST   | `/auth/login`                                                   | Public           |
+| POST   | `/auth/refresh`                                                 | Public           |
+| GET    | `/auth/me`                                                      | Auth             |
+| POST   | `/auth/logout`                                                  | Auth             |
+| POST   | `/auth/change-password`                                         | Auth             |
+| GET    | `/auth/users`                                                   | `user:manage`    |
+| POST   | `/auth/users`                                                   | `user:manage`    |
+| PATCH  | `/auth/users/{id}`                                              | `user:manage`    |
+| GET    | `/academic/years`                                               | `academic:read`  |
+| POST   | `/academic/years`                                               | `academic:write` |
+| PATCH  | `/academic/years/{id}`                                          | `academic:write` |
+| POST   | `/academic/years/{id}/activate`                                 | `academic:write` |
+| POST   | `/academic/years/{id}/close`                                    | `academic:write` |
+| GET    | `/academic/terms`                                               | `academic:read`  |
+| POST   | `/academic/terms`                                               | `academic:write` |
+| PATCH  | `/academic/terms/{id}`                                          | `academic:write` |
+| GET    | `/academic/class-levels`                                        | `academic:read`  |
+| POST   | `/academic/class-levels`                                        | `academic:write` |
+| PATCH  | `/academic/class-levels/{id}`                                   | `academic:write` |
+| GET    | `/academic/sections`                                            | `academic:read`  |
+| POST   | `/academic/sections`                                            | `academic:write` |
+| PATCH  | `/academic/sections/{id}`                                       | `academic:write` |
+| GET    | `/academic/subjects`                                            | `academic:read`  |
+| POST   | `/academic/subjects`                                            | `academic:write` |
+| PATCH  | `/academic/subjects/{id}`                                       | `academic:write` |
+| GET    | `/academic/years/{yearId}/class-levels/{classLevelId}/subjects` | `academic:read`  |
+| POST   | `/academic/years/{yearId}/class-levels/{classLevelId}/subjects` | `academic:write` |
+| GET    | `/academic/sections/{sectionId}/subjects`                       | `academic:read`  |
+| POST   | `/academic/sections/{sectionId}/subjects`                       | `academic:write` |
+| GET    | `/academic/teacher-assignments`                                 | `academic:read`  |
+| POST   | `/academic/teacher-assignments`                                 | `academic:write` |
+| PATCH  | `/academic/teacher-assignments/{id}/end`                        | `academic:write` |
+| GET    | `/academic/class-teacher-assignments`                           | `academic:read`  |
+| POST   | `/academic/class-teacher-assignments`                           | `academic:write` |
+| PATCH  | `/academic/class-teacher-assignments/{id}/end`                  | `academic:write` |
+| GET    | `/students`                                                     | `student:read`   |
+| GET    | `/students/{id}`                                                | `student:read`   |
+| GET    | `/students/{id}/enrollments`                                    | `student:read`   |
+| POST   | `/students`                                                     | `student:write`  |
+| PATCH  | `/students/{id}`                                                | `student:write`  |
+| PATCH  | `/students/{id}/link-account`                                   | `student:write`  |
+| GET    | `/students/{id}/guardians`                                      | `student:write`  |
+| POST   | `/students/{id}/guardians`                                      | `student:write`  |
+| POST   | `/students/{id}/enrollments`                                    | `student:write`  |
+| PATCH  | `/guardians/{id}/link-account`                                  | `student:write`  |
+| POST   | `/enrollments/{enrollmentId}/placements`                        | `student:write`  |
+| POST   | `/enrollments/{enrollmentId}/close`                             | `student:write`  |

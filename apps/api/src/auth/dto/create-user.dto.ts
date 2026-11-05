@@ -19,9 +19,4 @@ export class CreateUserDto {
 
   @IsEnum(UserRole)
   role!: UserRole;
-
-  @IsString()
-  @MinLength(12)
-  @MaxLength(128)
-  initialPassword!: string;
 }

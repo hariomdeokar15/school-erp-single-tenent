@@ -309,11 +309,15 @@ export class AuthService {
       email: string;
       displayName: string;
       role: UserRole;
-      initialPassword: string;
     },
     actor: AuthenticatedUser,
     ipAddress: string,
-  ): Promise<{ id: string; email: string; role: UserRole }> {
+  ): Promise<{
+    id: string;
+    email: string;
+    role: UserRole;
+    temporaryPassword: string;
+  }> {
     const privilegedRoles = [
       UserRole.OWNER,
       UserRole.ADMIN,
@@ -328,7 +332,8 @@ export class AuthService {
       );
     }
     const email = this.normalizeEmail(input.email);
-    const passwordHash = await this.hashPassword(input.initialPassword);
+    const temporaryPassword = randomBytes(24).toString("base64url");
+    const passwordHash = await this.hashPassword(temporaryPassword);
     const created = await this.dataSource
       .transaction(async (manager) => {
         const userRepository = manager.getRepository(User);
@@ -369,7 +374,12 @@ export class AuthService {
       ipAddress,
       metadata: { role: input.role },
     });
-    return { id: created.id, email: created.email, role: input.role };
+    return {
+      id: created.id,
+      email: created.email,
+      role: input.role,
+      temporaryPassword,
+    };
   }
 
   async listUsers(page: number, pageSize: number) {

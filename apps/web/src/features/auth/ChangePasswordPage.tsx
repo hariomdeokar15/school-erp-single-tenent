@@ -55,13 +55,13 @@ export function ChangePasswordPage() {
           name="newPassword"
           label={t("newPassword")}
           autoComplete="new-password"
-          minLength={12}
+          minLength={8}
         />
         <PasswordField
           name="confirmPassword"
           label={t("confirmPassword")}
           autoComplete="new-password"
-          minLength={12}
+          minLength={8}
         />
         {error && (
           <p role="alert" className="text-sm text-red-700">

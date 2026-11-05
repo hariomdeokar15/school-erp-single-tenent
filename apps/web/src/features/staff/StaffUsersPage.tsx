@@ -13,6 +13,12 @@ type UserRecord = {
   roles: string[];
   mustChangePassword: boolean;
 };
+type CreatedUserCredentials = {
+  id: string;
+  email: string;
+  role: string;
+  temporaryPassword: string;
+};
 type PageResult<T> = {
   items: T[];
   page: number;
@@ -27,6 +33,8 @@ export function StaffUsersPage() {
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const [message, setMessage] = useState("");
+  const [createdCredentials, setCreatedCredentials] =
+    useState<CreatedUserCredentials | null>(null);
   const users = useQuery({
     queryKey: ["staff-users"],
     queryFn: () =>
@@ -36,12 +44,13 @@ export function StaffUsersPage() {
   });
   const createUser = useMutation({
     mutationFn: (body: Record<string, string>) =>
-      fetchApi("/api/v1/auth/users", {
+      fetchApi<CreatedUserCredentials>("/api/v1/auth/users", {
         method: "POST",
         body: JSON.stringify(body),
       }),
-    onSuccess: async () => {
+    onSuccess: async (credentials) => {
       setShowCreate(false);
+      setCreatedCredentials(credentials);
       setMessage(t("accountCreated"));
       await queryClient.invalidateQueries({ queryKey: ["staff-users"] });
     },
@@ -55,7 +64,6 @@ export function StaffUsersPage() {
       email: String(form.get("email") ?? "").trim(),
       displayName: String(form.get("displayName") ?? "").trim(),
       role: String(form.get("role") ?? ""),
-      initialPassword: String(form.get("initialPassword") ?? ""),
     });
   }
 
@@ -78,6 +86,7 @@ export function StaffUsersPage() {
           onClick={() => {
             setShowCreate((value) => !value);
             setMessage("");
+            setCreatedCredentials(null);
           }}
           className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
         >
@@ -128,23 +137,11 @@ export function StaffUsersPage() {
               ))}
             </select>
           </label>
-          <label className="text-sm font-medium text-slate-700">
-            {t("initialPassword")}
-            <input
-              name="initialPassword"
-              type="password"
-              autoComplete="new-password"
-              required
-              minLength={12}
-              maxLength={128}
-              className="mt-1.5 min-h-11 w-full rounded-lg border border-slate-300 px-3"
-            />
-            <span className="mt-1 block text-xs font-normal text-slate-500">
-              {t("initialPasswordSecureNote")}
-            </span>
-          </label>
           <p className="text-xs text-slate-500 sm:col-span-2">
             {t("multiRoleAdminNote")}
+          </p>
+          <p className="text-xs text-slate-500 sm:col-span-2">
+            {t("generatedPasswordNotice")}
           </p>
           <div className="flex gap-2 sm:col-span-2">
             <button
@@ -172,6 +169,35 @@ export function StaffUsersPage() {
         >
           {message}
         </p>
+      )}
+
+      {createdCredentials && (
+        <section
+          aria-labelledby="new-account-credentials"
+          className="space-y-2 rounded-xl border border-amber-200 bg-amber-50 p-4"
+        >
+          <h2 id="new-account-credentials" className="font-semibold text-slate-900">
+            {t("temporaryCredentials")}
+          </h2>
+          <p className="text-sm text-slate-700">{createdCredentials.email}</p>
+          <div className="flex flex-wrap items-center gap-3">
+            <code className="select-all rounded bg-white px-3 py-2 font-mono text-sm">
+              {createdCredentials.temporaryPassword}
+            </code>
+            <button
+              type="button"
+              onClick={() =>
+                void navigator.clipboard.writeText(
+                  createdCredentials.temporaryPassword,
+                )
+              }
+              className="min-h-10 rounded-lg border border-amber-300 bg-white px-3 text-sm font-medium"
+            >
+              {t("copyPassword")}
+            </button>
+          </div>
+          <p className="text-xs text-slate-600">{t("generatedPasswordNotice")}</p>
+        </section>
       )}
 
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">

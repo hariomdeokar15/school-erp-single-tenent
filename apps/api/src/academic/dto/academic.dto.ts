@@ -1,5 +1,8 @@
-import { Type } from "class-transformer";
+import { Transform, Type } from "class-transformer";
 import {
+  ArrayMaxSize,
+  ArrayMinSize,
+  IsArray,
   IsBoolean,
   IsDateString,
   IsEmail,
@@ -290,11 +293,6 @@ export class CreateFamilyPortalDto {
   @Matches(/^\+?[0-9][0-9 ()-]{5,18}$/)
   phone?: string;
 
-  @ValidateIf((input: CreateFamilyPortalDto) => input.action === "CREATE")
-  @IsString()
-  @Length(12, 128)
-  initialPassword!: string;
-
   @ValidateIf(
     (input: CreateFamilyPortalDto) => input.action === "LINK_EXISTING",
   )
@@ -360,6 +358,47 @@ export class CreateAndLinkGuardianDto extends CreateGuardianDto {
   @IsOptional()
   @IsBoolean()
   isPrimaryContact?: boolean;
+}
+
+export class UpdateStudentGuardianDto {
+  @IsOptional()
+  @IsString()
+  @Length(1, 50)
+  relationship?: string;
+
+  @IsOptional()
+  @Transform(({ value }) =>
+    value === "true" ? true : value === "false" ? false : value,
+  )
+  @IsBoolean()
+  isPrimaryContact?: boolean;
+}
+
+export class PromotionStudentDto {
+  @IsUUID()
+  studentId!: string;
+
+  @IsUUID()
+  sectionId!: string;
+}
+
+export class PromoteStudentsDto {
+  @IsUUID()
+  sourceAcademicYearId!: string;
+
+  @IsUUID()
+  targetAcademicYearId!: string;
+
+  @IsDateString({ strict: true })
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  enrollmentDate!: string;
+
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(100)
+  @ValidateNested({ each: true })
+  @Type(() => PromotionStudentDto)
+  students!: PromotionStudentDto[];
 }
 
 export class LinkPersonAccountDto {

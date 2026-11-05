@@ -22,7 +22,9 @@ import {
   CreatePlacementDto,
   CreateStudentDto,
   LinkPersonAccountDto,
+  PromoteStudentsDto,
   StudentQueryDto,
+  UpdateStudentGuardianDto,
   UpdateStudentDto,
 } from "./dto/academic.dto";
 import { StudentService } from "./student.service";
@@ -32,6 +34,20 @@ import { StudentService } from "./student.service";
 @Controller("students")
 export class StudentController {
   constructor(private readonly students: StudentService) {}
+
+  @Post("promotions")
+  @RequirePermissions(Permission.STUDENT_WRITE)
+  promoteStudents(
+    @Body() input: PromoteStudentsDto,
+    @CurrentUser() actor: AuthenticatedUser,
+    @Req() request: Request,
+  ) {
+    return this.students.promoteStudents(
+      input,
+      actor,
+      this.auditContext(request),
+    );
+  }
 
   @Get("family-portal-accounts")
   @RequirePermissions(Permission.STUDENT_WRITE)
@@ -87,6 +103,30 @@ export class StudentController {
     return this.students.update(id, input, actor, this.auditContext(request));
   }
 
+  @Post(":id/archive")
+  @RequirePermissions(Permission.STUDENT_WRITE)
+  archive(
+    @Param("id", ParseUUIDPipe) id: string,
+    @CurrentUser() actor: AuthenticatedUser,
+    @Req() request: Request,
+  ) {
+    return this.students.archiveStudent(id, actor, this.auditContext(request));
+  }
+
+  @Post(":id/reactivate")
+  @RequirePermissions(Permission.STUDENT_WRITE)
+  reactivate(
+    @Param("id", ParseUUIDPipe) id: string,
+    @CurrentUser() actor: AuthenticatedUser,
+    @Req() request: Request,
+  ) {
+    return this.students.reactivateStudent(
+      id,
+      actor,
+      this.auditContext(request),
+    );
+  }
+
   @Patch(":id/link-account")
   @RequirePermissions(Permission.STUDENT_WRITE)
   linkStudentAccount(
@@ -124,6 +164,40 @@ export class StudentController {
     return this.students.createAndLinkGuardian(
       id,
       input,
+      actor,
+      this.auditContext(request),
+    );
+  }
+
+  @Patch(":studentId/guardians/:linkId")
+  @RequirePermissions(Permission.STUDENT_WRITE)
+  updateGuardianLink(
+    @Param("studentId", ParseUUIDPipe) studentId: string,
+    @Param("linkId", ParseUUIDPipe) linkId: string,
+    @Body() input: UpdateStudentGuardianDto,
+    @CurrentUser() actor: AuthenticatedUser,
+    @Req() request: Request,
+  ) {
+    return this.students.updateGuardianLink(
+      studentId,
+      linkId,
+      input,
+      actor,
+      this.auditContext(request),
+    );
+  }
+
+  @Post(":studentId/guardians/:linkId/end")
+  @RequirePermissions(Permission.STUDENT_WRITE)
+  endGuardianLink(
+    @Param("studentId", ParseUUIDPipe) studentId: string,
+    @Param("linkId", ParseUUIDPipe) linkId: string,
+    @CurrentUser() actor: AuthenticatedUser,
+    @Req() request: Request,
+  ) {
+    return this.students.endGuardianLink(
+      studentId,
+      linkId,
       actor,
       this.auditContext(request),
     );

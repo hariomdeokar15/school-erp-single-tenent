@@ -2,7 +2,7 @@ import { useDeferredValue, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, Search, UserPlus } from "lucide-react";
+import { ArrowRight, Search, TrendingUp, UserPlus } from "lucide-react";
 import { Permission } from "@schoolerp/contracts";
 import { fetchApi } from "../../lib/api-client";
 import { useAuth } from "../auth/AuthContext";
@@ -23,6 +23,9 @@ type Student = {
   status: string;
   dateOfBirth?: string | null;
 };
+type CreatedStudent = Student & {
+  familyPortal?: { email: string; temporaryPassword?: string };
+};
 type FamilyPortalAccount = {
   userId: string;
   displayName: string;
@@ -36,7 +39,6 @@ type FamilyPortalInput =
       relationship: string;
       email: string;
       phone?: string;
-      initialPassword: string;
     }
   | { action: "LINK_EXISTING"; relationship: string; userId: string };
 
@@ -63,6 +65,15 @@ export function StudentsPage() {
     "CREATE" | "LINK_EXISTING"
   >("CREATE");
   const [formError, setFormError] = useState("");
+  const [createdFamilyCredentials, setCreatedFamilyCredentials] = useState<{
+    email: string;
+    temporaryPassword: string;
+  } | null>(null);
+  const [statusActionError, setStatusActionError] = useState("");
+  const canPromote =
+    user?.roles.some((item) =>
+      ["OWNER", "PRINCIPAL", "ADMIN"].includes(item),
+    ) ?? false;
   const familyPortalAccounts = useQuery({
     queryKey: ["family-portal-accounts"],
     queryFn: () =>
@@ -96,16 +107,37 @@ export function StudentsPage() {
       dateOfBirth?: string;
       familyPortal?: FamilyPortalInput;
     }) =>
-      fetchApi<Student>("/api/v1/students", {
+      fetchApi<CreatedStudent>("/api/v1/students", {
         method: "POST",
         body: JSON.stringify(input),
       }),
     onSuccess: async (created) => {
       await queryClient.invalidateQueries({ queryKey: ["students"] });
       setShowCreate(false);
+      if (created.familyPortal?.temporaryPassword) {
+        setCreatedFamilyCredentials({
+          email: created.familyPortal.email,
+          temporaryPassword: created.familyPortal.temporaryPassword,
+        });
+        return;
+      }
       navigate(`/students/${created.id}`);
     },
     onError: () => setFormError(t("requestFailed")),
+  });
+  const changeStudentStatus = useMutation({
+    mutationFn: (input: { id: string; action: "archive" | "reactivate" }) =>
+      fetchApi(
+        `/api/v1/students/${encodeURIComponent(input.id)}/${input.action}`,
+        {
+          method: "POST",
+        },
+      ),
+    onSuccess: async () => {
+      setStatusActionError("");
+      await queryClient.invalidateQueries({ queryKey: ["students"] });
+    },
+    onError: () => setStatusActionError(t("requestFailed")),
   });
 
   function submitCreate(event: FormEvent<HTMLFormElement>) {
@@ -127,7 +159,6 @@ export function StudentsPage() {
             ...(String(data.get("guardianPhone") ?? "").trim()
               ? { phone: String(data.get("guardianPhone") ?? "").trim() }
               : {}),
-            initialPassword: String(data.get("initialPassword") ?? ""),
           }
         : {
             action: "LINK_EXISTING" as const,
@@ -162,12 +193,22 @@ export function StudentsPage() {
             onClick={() => {
               setShowCreate((current) => !current);
               setFormError("");
+              setCreatedFamilyCredentials(null);
             }}
             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
           >
             <UserPlus aria-hidden="true" className="h-4 w-4" />
             {t("addStudent")}
           </button>
+        )}
+        {canPromote && (
+          <Link
+            to="/students/promote"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-indigo-200 bg-white px-4 text-sm font-semibold text-indigo-700 hover:bg-indigo-50"
+          >
+            <TrendingUp aria-hidden="true" className="h-4 w-4" />
+            {t("promoteStudents")}
+          </Link>
         )}
       </header>
 
@@ -245,13 +286,6 @@ export function StudentsPage() {
                       label="phone"
                       type="tel"
                     />
-                    <StudentField
-                      name="initialPassword"
-                      label="initialPassword"
-                      type="password"
-                      minLength={12}
-                      required
-                    />
                   </>
                 ) : (
                   <label className="block text-sm font-medium text-slate-700">
@@ -281,6 +315,11 @@ export function StudentsPage() {
                 <p className="text-xs text-slate-600 sm:col-span-2 lg:col-span-3">
                   {t("familyPortalLoginHelp")}
                 </p>
+                {familyPortalAction === "CREATE" && (
+                  <p className="text-xs text-slate-600 sm:col-span-2 lg:col-span-3">
+                    {t("generatedPasswordNotice")}
+                  </p>
+                )}
               </div>
             )}
           </fieldset>
@@ -309,6 +348,51 @@ export function StudentsPage() {
             </button>
           </div>
         </form>
+      )}
+
+      {createdFamilyCredentials && (
+        <section
+          aria-labelledby="family-portal-credentials"
+          className="space-y-2 rounded-xl border border-amber-200 bg-amber-50 p-4"
+        >
+          <h2
+            id="family-portal-credentials"
+            className="font-semibold text-slate-900"
+          >
+            {t("temporaryCredentials")}
+          </h2>
+          <p className="text-sm text-slate-700">
+            {createdFamilyCredentials.email}
+          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <code className="select-all rounded bg-white px-3 py-2 font-mono text-sm">
+              {createdFamilyCredentials.temporaryPassword}
+            </code>
+            <button
+              type="button"
+              onClick={() =>
+                void navigator.clipboard.writeText(
+                  createdFamilyCredentials.temporaryPassword,
+                )
+              }
+              className="min-h-10 rounded-lg border border-amber-300 bg-white px-3 text-sm font-medium"
+            >
+              {t("copyPassword")}
+            </button>
+          </div>
+          <p className="text-xs text-slate-600">
+            {t("generatedPasswordNotice")}
+          </p>
+        </section>
+      )}
+
+      {statusActionError && (
+        <p
+          role="alert"
+          className="rounded-lg bg-red-50 p-3 text-sm text-red-700"
+        >
+          {statusActionError}
+        </p>
       )}
 
       <label className="relative block max-w-xl">
@@ -348,7 +432,7 @@ export function StudentsPage() {
           </div>
         ) : students.data?.items.length ? (
           <>
-            <div className="hidden grid-cols-[1.1fr_2fr_1fr_auto] gap-4 border-b border-slate-100 bg-slate-50 px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500 sm:grid">
+            <div className="hidden grid-cols-[1.1fr_2fr_1fr_auto_auto] gap-4 border-b border-slate-100 bg-slate-50 px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500 sm:grid">
               <span>{t("studentNumber")}</span>
               <span>{t("studentName")}</span>
               <span>{t("studentStatus")}</span>
@@ -356,25 +440,53 @@ export function StudentsPage() {
             </div>
             <div className="divide-y divide-slate-100">
               {students.data.items.map((student) => (
-                <Link
+                <div
                   key={student.id}
-                  to={`/students/${student.id}`}
-                  className="grid min-h-16 gap-2 px-4 py-4 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:grid-cols-[1.1fr_2fr_1fr_auto] sm:items-center sm:gap-4 sm:px-5"
+                  className="flex flex-col gap-3 px-4 py-4 transition hover:bg-slate-50 sm:grid sm:grid-cols-[1.1fr_2fr_1fr_auto_auto] sm:items-center sm:gap-4 sm:px-5"
                 >
-                  <span className="font-mono text-xs text-slate-500">
-                    {student.studentNumber}
-                  </span>
-                  <span className="font-medium text-slate-900">
-                    {student.firstName} {student.lastName}
-                  </span>
-                  <span>
-                    <StudentStatusBadge status={student.status} />
-                  </span>
-                  <ArrowRight
-                    aria-hidden="true"
-                    className="hidden h-4 w-4 text-slate-400 sm:block"
-                  />
-                </Link>
+                  <Link
+                    to={`/students/${student.id}`}
+                    className="grid min-h-10 flex-1 gap-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:col-span-4 sm:grid-cols-[1.1fr_2fr_1fr_auto] sm:items-center sm:gap-4"
+                  >
+                    <span className="font-mono text-xs text-slate-500">
+                      {student.studentNumber}
+                    </span>
+                    <span className="font-medium text-slate-900">
+                      {student.firstName} {student.lastName}
+                    </span>
+                    <span>
+                      <StudentStatusBadge status={student.status} />
+                    </span>
+                    <ArrowRight
+                      aria-hidden="true"
+                      className="hidden h-4 w-4 text-slate-400 sm:block"
+                    />
+                  </Link>
+                  {canWrite && (
+                    <button
+                      type="button"
+                      disabled={changeStudentStatus.isPending}
+                      onClick={() => {
+                        const action =
+                          student.status === "ARCHIVED"
+                            ? "reactivate"
+                            : "archive";
+                        if (
+                          action === "archive" &&
+                          !window.confirm(t("confirmArchiveStudent"))
+                        ) {
+                          return;
+                        }
+                        changeStudentStatus.mutate({ id: student.id, action });
+                      }}
+                      className="min-h-10 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-700 disabled:opacity-50"
+                    >
+                      {student.status === "ARCHIVED"
+                        ? t("reactivateStudent")
+                        : t("archiveStudent")}
+                    </button>
+                  )}
+                </div>
               ))}
             </div>
             <div className="flex flex-col justify-between gap-3 border-t border-slate-100 px-5 py-3 text-xs text-slate-500 sm:flex-row sm:items-center">
