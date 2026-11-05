@@ -8,7 +8,6 @@ import {
 } from "@nestjs/common";
 import { Request, Response } from "express";
 import { ApiError } from "@schoolerp/contracts";
-import { CORRELATION_ID_HEADER } from "../constants";
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -17,10 +16,9 @@ export class GlobalExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
-    const request = ctx.getRequest<Request>();
+    const request = ctx.getRequest<Request & { correlationId?: string }>();
 
-    const correlationId =
-      (request.headers[CORRELATION_ID_HEADER] as string) || "N/A";
+    const correlationId = request.correlationId || "N/A";
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let errorCode = "INTERNAL_SERVER_ERROR";
@@ -35,10 +33,12 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       if (typeof res === "string") {
         message = res;
       } else if (typeof res === "object" && res !== null) {
-        const resObj = res as Record<string, any>;
-        message = resObj.message || exception.message;
-        errorCode = resObj.error || exception.name;
-        if (resObj.message && Array.isArray(resObj.message)) {
+        const resObj = res as Record<string, unknown>;
+        message =
+          typeof resObj.message === "string" ? resObj.message : exception.message;
+        errorCode =
+          typeof resObj.error === "string" ? resObj.error : exception.name;
+        if (Array.isArray(resObj.message)) {
           details = resObj.message;
           message = "Validation failed";
         }

@@ -6,11 +6,15 @@ import { HealthModule } from "./health/health.module";
 import { AuditModule } from "./audit/audit.module";
 import { QueuesModule } from "./queues/queues.module";
 import { I18nModule } from "./i18n/i18n.module";
+import { FeatureFlagsModule } from "./config/feature-flags.module";
+import { AuthModule } from "./auth/auth.module";
+import { AcademicModule } from "./academic/academic.module";
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: [".env", "../../.env"],
       load: [configuration],
     }),
     DatabaseModule,
@@ -18,6 +22,9 @@ import { I18nModule } from "./i18n/i18n.module";
     AuditModule,
     QueuesModule,
     I18nModule,
+    FeatureFlagsModule,
+    AuthModule,
+    AcademicModule,
   ],
 })
 export class AppModule {}

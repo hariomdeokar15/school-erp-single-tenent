@@ -1,12 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { HealthService } from "../src/health/health.service";
 import { HealthController } from "../src/health/health.controller";
+import { DataSource } from "typeorm";
+import { ConfigService } from "@nestjs/config";
+import { Request } from "express";
 
 describe("Health Module", () => {
   let healthService: HealthService;
   let healthController: HealthController;
-  let mockDataSource: any;
-  let mockConfigService: any;
+  let mockDataSource: Pick<DataSource, "isInitialized" | "query">;
+  let mockConfigService: Pick<ConfigService, "get">;
 
   beforeEach(() => {
     mockDataSource = {
@@ -16,12 +19,17 @@ describe("Health Module", () => {
     mockConfigService = {
       get: vi.fn().mockReturnValue("redis://localhost:6379"),
     };
-    healthService = new HealthService(mockDataSource, mockConfigService);
+    healthService = new HealthService(
+      mockDataSource as DataSource,
+      mockConfigService as ConfigService,
+    );
     healthController = new HealthController(healthService);
   });
 
   it("returns valid health payload for GET /health", () => {
-    const mockReq = { headers: { "x-correlation-id": "test-uuid-123" } } as any;
+    const mockReq = {
+      headers: { "x-correlation-id": "test-uuid-123" },
+    } as unknown as Request & { correlationId?: string };
     const response = healthController.getHealth(mockReq);
 
     expect(response.status).toBe("ok");
