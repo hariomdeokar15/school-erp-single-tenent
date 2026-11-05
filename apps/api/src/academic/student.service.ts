@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
@@ -14,6 +15,7 @@ import {
   Repository,
 } from "typeorm";
 import * as argon2 from "argon2";
+import { randomBytes } from "crypto";
 import { AuditEvent } from "../audit/entities/audit-event.entity";
 import { AuthenticatedUser } from "../auth/auth.types";
 import { RoleAssignment } from "../auth/entities/role-assignment.entity";
@@ -35,8 +37,10 @@ import {
   CreateEnrollmentDto,
   CreatePlacementDto,
   CreateStudentDto,
+  PromoteStudentsDto,
   StudentQueryDto,
   LinkPersonAccountDto,
+  UpdateStudentGuardianDto,
   UpdateStudentDto,
 } from "./dto/academic.dto";
 
@@ -45,6 +49,11 @@ const BROAD_STUDENT_ROLES = new Set<UserRole>([
   UserRole.PRINCIPAL,
   UserRole.ADMIN,
   UserRole.ADMISSIONS_OFFICER,
+]);
+const PROMOTION_ROLES = new Set<UserRole>([
+  UserRole.OWNER,
+  UserRole.PRINCIPAL,
+  UserRole.ADMIN,
 ]);
 
 @Injectable()
@@ -132,6 +141,273 @@ export class StudentService {
     return this.studentSummary(student, actor, true);
   }
 
+  async archiveStudent(
+    studentId: string,
+    actor: AuthenticatedUser,
+    context: AuditRequestContext,
+  ): Promise<Record<string, unknown>> {
+    const student = await this.dataSource.transaction(async (manager) => {
+      const studentRepository = manager.getRepository(Student);
+      const student = await studentRepository.findOne({
+        where: { id: studentId },
+        lock: { mode: "pessimistic_write" },
+      });
+      if (!student) throw new NotFoundException("Student was not found.");
+      if (student.status === StudentStatus.ARCHIVED) {
+        throw new ConflictException("Student is already archived.");
+      }
+      const activeEnrollment = await manager.getRepository(Enrollment).exist({
+        where: { studentId, status: EnrollmentStatus.ENROLLED },
+      });
+      if (activeEnrollment) {
+        throw new ConflictException(
+          "Close the student's active enrollment before archiving the record.",
+        );
+      }
+      student.status = StudentStatus.ARCHIVED;
+      const saved = await studentRepository.save(student);
+      await this.recordAuditWithManager(
+        manager,
+        actor,
+        context,
+        "student.archived",
+        "student",
+        studentId,
+      );
+      return saved;
+    });
+    return this.studentSummary(student, actor, true);
+  }
+
+  async reactivateStudent(
+    studentId: string,
+    actor: AuthenticatedUser,
+    context: AuditRequestContext,
+  ): Promise<Record<string, unknown>> {
+    const student = await this.dataSource.transaction(async (manager) => {
+      const studentRepository = manager.getRepository(Student);
+      const student = await studentRepository.findOne({
+        where: { id: studentId },
+        lock: { mode: "pessimistic_write" },
+      });
+      if (!student) throw new NotFoundException("Student was not found.");
+      if (student.status !== StudentStatus.ARCHIVED) {
+        throw new ConflictException("Student is not archived.");
+      }
+      student.status = StudentStatus.ACTIVE;
+      const saved = await studentRepository.save(student);
+      await this.recordAuditWithManager(
+        manager,
+        actor,
+        context,
+        "student.reactivated",
+        "student",
+        studentId,
+      );
+      return saved;
+    });
+    return this.studentSummary(student, actor, true);
+  }
+
+  async promoteStudents(
+    input: PromoteStudentsDto,
+    actor: AuthenticatedUser,
+    context: AuditRequestContext,
+  ): Promise<{
+    total: number;
+    promoted: number;
+    alreadyPromoted: number;
+    failed: number;
+    results: Array<Record<string, unknown>>;
+  }> {
+    if (!actor.roles.some((role) => PROMOTION_ROLES.has(role))) {
+      throw new ForbiddenException(
+        "Only an owner, principal, or administrator can promote students.",
+      );
+    }
+    if (input.sourceAcademicYearId === input.targetAcademicYearId) {
+      throw new BadRequestException(
+        "Choose different source and target academic years.",
+      );
+    }
+
+    const seenStudentIds = new Set<string>();
+    const results: Array<Record<string, unknown>> = [];
+    for (const entry of input.students) {
+      if (seenStudentIds.has(entry.studentId)) {
+        results.push({
+          studentId: entry.studentId,
+          status: "FAILED",
+          message: "A student can appear only once in a promotion batch.",
+        });
+        continue;
+      }
+      seenStudentIds.add(entry.studentId);
+      try {
+        const result = await this.dataSource
+          .transaction(async (manager) => {
+            const studentRepository = manager.getRepository(Student);
+            const student = await studentRepository.findOne({
+              where: { id: entry.studentId },
+              lock: { mode: "pessimistic_write" },
+            });
+            if (!student) {
+              throw new NotFoundException("Student was not found.");
+            }
+            if (student.status !== StudentStatus.ACTIVE) {
+              throw new ConflictException(
+                "Archived students cannot be promoted.",
+              );
+            }
+
+            const yearRepository = manager.getRepository(AcademicYear);
+            const sourceYear = await yearRepository.findOneBy({
+              id: input.sourceAcademicYearId,
+            });
+            const targetYear = await yearRepository.findOneBy({
+              id: input.targetAcademicYearId,
+            });
+            if (!sourceYear || !targetYear) {
+              throw new NotFoundException("Academic year was not found.");
+            }
+            if (
+              sourceYear.status !== AcademicYearStatus.CLOSED ||
+              targetYear.status === AcademicYearStatus.CLOSED ||
+              targetYear.startsOn <= sourceYear.startsOn
+            ) {
+              throw new BadRequestException(
+                "Promotion requires a closed source year and a later, open target year.",
+              );
+            }
+            this.assertDateInside(input.enrollmentDate, targetYear);
+
+            const enrollmentRepository = manager.getRepository(Enrollment);
+            const targetEnrollment = await enrollmentRepository.findOne({
+              where: {
+                studentId: student.id,
+                academicYearId: targetYear.id,
+              },
+              relations: { placements: true },
+              lock: { mode: "pessimistic_write" },
+            });
+            if (targetEnrollment) {
+              const currentPlacement = targetEnrollment.placements.find(
+                (placement) => placement.endsOn === null,
+              );
+              if (
+                targetEnrollment.status === EnrollmentStatus.ENROLLED &&
+                targetEnrollment.enrollmentDate === input.enrollmentDate &&
+                currentPlacement?.sectionId === entry.sectionId
+              ) {
+                return {
+                  studentId: student.id,
+                  enrollmentId: targetEnrollment.id,
+                  status: "ALREADY_PROMOTED",
+                };
+              }
+              throw new ConflictException(
+                "The student already has a different enrollment in the target year.",
+              );
+            }
+
+            const sourceEnrollment = await enrollmentRepository.findOne({
+              where: {
+                studentId: student.id,
+                academicYearId: sourceYear.id,
+              },
+              lock: { mode: "pessimistic_write" },
+            });
+            if (!sourceEnrollment) {
+              throw new BadRequestException(
+                "The student has no enrollment in the source year.",
+              );
+            }
+            if (sourceEnrollment.status !== EnrollmentStatus.COMPLETED) {
+              throw new ConflictException(
+                "Complete the source-year enrollment before promotion.",
+              );
+            }
+
+            const section = await manager.getRepository(Section).findOne({
+              where: { id: entry.sectionId },
+              lock: { mode: "pessimistic_write" },
+            });
+            if (
+              !section ||
+              !section.isActive ||
+              section.academicYearId !== targetYear.id
+            ) {
+              throw new BadRequestException(
+                "Choose an active section in the target academic year.",
+              );
+            }
+            await this.assertSectionCapacity(manager, section);
+
+            const enrollment = await enrollmentRepository.save(
+              enrollmentRepository.create({
+                studentId: student.id,
+                academicYearId: targetYear.id,
+                status: EnrollmentStatus.ENROLLED,
+                enrollmentDate: input.enrollmentDate,
+                exitDate: null,
+              }),
+            );
+            await manager.getRepository(EnrollmentPlacement).save({
+              enrollmentId: enrollment.id,
+              academicYearId: targetYear.id,
+              sectionId: section.id,
+              startsOn: input.enrollmentDate,
+              endsOn: null,
+              reason: "Annual promotion",
+            });
+            await this.recordAuditWithManager(
+              manager,
+              actor,
+              context,
+              "student.promoted",
+              "enrollment",
+              enrollment.id,
+              {
+                sourceAcademicYearId: sourceYear.id,
+                targetAcademicYearId: targetYear.id,
+                sectionId: section.id,
+              },
+            );
+            return {
+              studentId: student.id,
+              enrollmentId: enrollment.id,
+              status: "PROMOTED",
+            };
+          })
+          .catch((error: unknown) => this.mapStudentWriteError(error));
+        results.push(result);
+      } catch (error) {
+        results.push({
+          studentId: entry.studentId,
+          status: "FAILED",
+          message:
+            error instanceof Error
+              ? error.message
+              : "The promotion could not be completed.",
+        });
+      }
+    }
+
+    const promoted = results.filter(
+      (item) => item.status === "PROMOTED",
+    ).length;
+    const alreadyPromoted = results.filter(
+      (item) => item.status === "ALREADY_PROMOTED",
+    ).length;
+    return {
+      total: results.length,
+      promoted,
+      alreadyPromoted,
+      failed: results.length - promoted - alreadyPromoted,
+      results,
+    };
+  }
+
   async listEnrollments(
     studentId: string,
     actor: AuthenticatedUser,
@@ -172,15 +448,18 @@ export class StudentService {
     actor: AuthenticatedUser,
     context: AuditRequestContext,
   ): Promise<Record<string, unknown>> {
-    const familyPasswordHash =
+    const temporaryFamilyPassword =
       input.familyPortal?.action === "CREATE"
-        ? await argon2.hash(input.familyPortal.initialPassword, {
-            type: argon2.argon2id,
-            memoryCost: 19_456,
-            timeCost: 2,
-            parallelism: 1,
-          })
+        ? randomBytes(24).toString("base64url")
         : undefined;
+    const familyPasswordHash = temporaryFamilyPassword
+      ? await argon2.hash(temporaryFamilyPassword, {
+          type: argon2.argon2id,
+          memoryCost: 19_456,
+          timeCost: 2,
+          parallelism: 1,
+        })
+      : undefined;
     const saved = await this.dataSource
       .transaction(async (manager) => {
         const student = await manager.getRepository(Student).save({
@@ -202,7 +481,8 @@ export class StudentService {
           "student",
           student.id,
         );
-        let familyPortalAccount: { email: string } | undefined;
+        let familyPortalAccount:
+          { email: string; temporaryPassword?: string } | undefined;
         if (input.familyPortal?.action === "LINK_EXISTING") {
           const portal = input.familyPortal;
           const user = await manager.getRepository(User).findOne({
@@ -304,7 +584,10 @@ export class StudentService {
             guardian.id,
             { studentId: student.id, isPrimaryContact: true },
           );
-          familyPortalAccount = { email: user.email };
+          familyPortalAccount = {
+            email: user.email,
+            temporaryPassword: temporaryFamilyPassword,
+          };
         }
         return { student, familyPortalAccount };
       })
@@ -424,16 +707,140 @@ export class StudentService {
       correlationId: context.correlationId,
       metadata: null,
     });
-    return links.map(({ guardian, relationship, isPrimaryContact }) => ({
-      id: guardian.id,
-      firstName: guardian.firstName,
-      lastName: guardian.lastName,
-      email: guardian.email,
-      phone: guardian.phone,
-      relationship,
-      isPrimaryContact,
-      hasPortalAccount: guardian.userId !== null,
+    return links.map((link) => ({
+      id: link.guardian.id,
+      linkId: link.id,
+      firstName: link.guardian.firstName,
+      lastName: link.guardian.lastName,
+      email: link.guardian.email,
+      phone: link.guardian.phone,
+      relationship: link.relationship,
+      isPrimaryContact: link.isPrimaryContact,
+      endedAt: link.endedAt,
+      hasPortalAccount: link.guardian.userId !== null,
     }));
+  }
+
+  async updateGuardianLink(
+    studentId: string,
+    linkId: string,
+    input: UpdateStudentGuardianDto,
+    actor: AuthenticatedUser,
+    context: AuditRequestContext,
+  ): Promise<Record<string, unknown>> {
+    if (
+      input.relationship === undefined &&
+      input.isPrimaryContact === undefined
+    ) {
+      throw new BadRequestException("Provide a relationship change.");
+    }
+    const updated = await this.dataSource
+      .transaction(async (manager) => {
+        const student = await manager.getRepository(Student).findOne({
+          where: { id: studentId },
+          lock: { mode: "pessimistic_write" },
+        });
+        if (!student) throw new NotFoundException("Student was not found.");
+        const linkRepository = manager.getRepository(StudentGuardian);
+        const link = await linkRepository.findOne({
+          where: { id: linkId, studentId },
+          lock: { mode: "pessimistic_write" },
+        });
+        if (!link) {
+          throw new NotFoundException("Guardian relationship was not found.");
+        }
+        if (link.endedAt) {
+          throw new ConflictException(
+            "An ended guardian relationship cannot be edited.",
+          );
+        }
+        if (input.relationship !== undefined) {
+          link.relationship = this.requiredText(
+            input.relationship,
+            "Relationship",
+          );
+        }
+        let replacedPrimaryLinkIds: string[] = [];
+        if (input.isPrimaryContact === true) {
+          replacedPrimaryLinkIds = await this.clearActivePrimaryGuardian(
+            manager,
+            studentId,
+          );
+        }
+        if (input.isPrimaryContact !== undefined) {
+          link.isPrimaryContact = input.isPrimaryContact;
+        }
+        const saved = await linkRepository.save(link);
+        await this.recordAuditWithManager(
+          manager,
+          actor,
+          context,
+          "student.guardian.relationship_updated",
+          "student_guardian",
+          saved.id,
+          {
+            studentId,
+            relationshipChanged: input.relationship !== undefined,
+            primaryContactChanged: input.isPrimaryContact !== undefined,
+            replacedPrimaryLinkIds,
+          },
+        );
+        return saved;
+      })
+      .catch((error: unknown) => this.mapStudentWriteError(error));
+    return {
+      linkId: updated.id,
+      guardianId: updated.guardianId,
+      relationship: updated.relationship,
+      isPrimaryContact: updated.isPrimaryContact,
+      endedAt: updated.endedAt,
+    };
+  }
+
+  async endGuardianLink(
+    studentId: string,
+    linkId: string,
+    actor: AuthenticatedUser,
+    context: AuditRequestContext,
+  ): Promise<Record<string, unknown>> {
+    const ended = await this.dataSource
+      .transaction(async (manager) => {
+        const student = await manager.getRepository(Student).findOne({
+          where: { id: studentId },
+          lock: { mode: "pessimistic_write" },
+        });
+        if (!student) throw new NotFoundException("Student was not found.");
+        const linkRepository = manager.getRepository(StudentGuardian);
+        const link = await linkRepository.findOne({
+          where: { id: linkId, studentId },
+          lock: { mode: "pessimistic_write" },
+        });
+        if (!link) {
+          throw new NotFoundException("Guardian relationship was not found.");
+        }
+        if (link.endedAt) {
+          throw new ConflictException(
+            "This guardian relationship has already ended.",
+          );
+        }
+        link.endedAt = new Date();
+        const saved = await linkRepository.save(link);
+        await this.recordAuditWithManager(
+          manager,
+          actor,
+          context,
+          "student.guardian.relationship_ended",
+          "student_guardian",
+          saved.id,
+          { studentId },
+        );
+        return saved;
+      })
+      .catch((error: unknown) => this.mapStudentWriteError(error));
+    return {
+      linkId: ended.id,
+      endedAt: ended.endedAt,
+    };
   }
 
   async linkStudentAccount(
@@ -543,6 +950,9 @@ export class StudentService {
             userId: null,
           }),
         );
+        const replacedPrimaryLinkIds = input.isPrimaryContact
+          ? await this.clearActivePrimaryGuardian(manager, studentId)
+          : [];
         const link = await manager.getRepository(StudentGuardian).save(
           manager.getRepository(StudentGuardian).create({
             studentId,
@@ -558,6 +968,9 @@ export class StudentService {
           "student.guardian.linked",
           "student_guardian",
           link.id,
+          replacedPrimaryLinkIds.length
+            ? { studentId, replacedPrimaryLinkIds }
+            : undefined,
         );
         return { guardian, link };
       })
@@ -823,7 +1236,9 @@ export class StudentService {
         SELECT 1
         FROM "student_guardians" sg
         JOIN "guardians" g ON g."id" = sg."guardianId"
-        WHERE sg."studentId" = student."id" AND g."userId" = :scopeUserId
+        WHERE sg."studentId" = student."id"
+          AND sg."endedAt" IS NULL
+          AND g."userId" = :scopeUserId
       )`);
     }
     if (actor.roles.includes(UserRole.STUDENT)) {
@@ -887,6 +1302,31 @@ export class StudentService {
         "The selected section has reached its capacity.",
       );
     }
+  }
+
+  private async clearActivePrimaryGuardian(
+    manager: EntityManager,
+    studentId: string,
+  ): Promise<string[]> {
+    const repository = manager.getRepository(StudentGuardian);
+    const currentPrimaryLinks = await repository.find({
+      where: {
+        studentId,
+        endedAt: IsNull(),
+        isPrimaryContact: true,
+      },
+      lock: { mode: "pessimistic_write" },
+    });
+    if (!currentPrimaryLinks.length) return [];
+    await repository.update(
+      {
+        studentId,
+        endedAt: IsNull(),
+        isPrimaryContact: true,
+      },
+      { isPrimaryContact: false },
+    );
+    return currentPrimaryLinks.map((link) => link.id);
   }
 
   private async requireLinkedAccount(

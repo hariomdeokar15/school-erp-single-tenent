@@ -13,10 +13,11 @@ import { Guardian } from "./guardian.entity";
 @Entity({ name: "student_guardians" })
 @Index("UQ_student_guardians_pair", ["studentId", "guardianId"], {
   unique: true,
+  where: '"endedAt" IS NULL',
 })
 @Index("UQ_student_guardians_one_primary", ["studentId"], {
   unique: true,
-  where: '"isPrimaryContact" = true',
+  where: '"isPrimaryContact" = true AND "endedAt" IS NULL',
 })
 export class StudentGuardian {
   @PrimaryGeneratedColumn("uuid")
@@ -45,6 +46,9 @@ export class StudentGuardian {
 
   @Column({ type: "boolean", default: false })
   isPrimaryContact!: boolean;
+
+  @Column({ type: "timestamptz", nullable: true })
+  endedAt!: Date | null;
 
   @CreateDateColumn({ type: "timestamptz" })
   createdAt!: Date;

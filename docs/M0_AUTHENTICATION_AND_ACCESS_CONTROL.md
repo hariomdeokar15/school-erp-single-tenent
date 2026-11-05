@@ -37,7 +37,7 @@ The M2 student record read permission is relationship-scoped in the API: a stude
 - `GET /api/v1/auth/me` — current authenticated account.
 - `POST /api/v1/auth/logout` — revokes the current session.
 - `POST /api/v1/auth/change-password` — validates the current password, updates the Argon2id hash, and revokes every session.
-- `POST /api/v1/auth/users` — provisions an account with an initial password and requires the user to change it.
+- `POST /api/v1/auth/users` — provisions an account with a cryptographically generated temporary password returned once in the creation response; the user must change it at first sign-in. User-chosen passwords require at least 8 characters.
 - `GET /api/v1/auth/users?page=1&pageSize=25` — paginated account list for users with `user:manage`.
 - `PATCH /api/v1/auth/users/:id` — changes a user's role or active status; role changes and account disabling revoke active sessions. The final active owner cannot be removed or disabled.
 
@@ -47,7 +47,7 @@ Use `@Public()` only for intentionally anonymous routes, `@Authenticated()` for 
 
 1. Start PostgreSQL and Redis and configure the local API environment. Do not commit `.env` or copy production secrets into development.
 2. Apply migrations from the API workspace: `corepack pnpm --filter @schoolerp/api migration:run`.
-3. Provision the first owner interactively: `corepack pnpm --filter @schoolerp/api bootstrap:owner`. The script requires an interactive terminal and does not echo the password.
+3. Provision the first owner interactively: `corepack pnpm --filter @schoolerp/api bootstrap:owner`. The script generates a temporary password, displays it once in the terminal, and forces a password change at first sign-in. Run it in a private terminal, not a recorded/shared session.
 4. Start the API and sign in through the web or mobile app.
 
 Local development can generate an ephemeral RSA key pair when the example placeholders are present; restarting the API invalidates access tokens, but users can sign in again. Production requires a stable, matching RSA PEM key pair in the secret manager.
@@ -56,7 +56,7 @@ Local development can generate an ephemeral RSA key pair when the example placeh
 
 - Review the role matrix with Vaibhav, Hariom, and Om before adding business endpoints; narrow grants as needed.
 - MFA for privileged staff is not implemented. Add TOTP or an approved identity provider and define enrollment/recovery before production use.
-- Password reset and invitation delivery are not implemented. User creation currently distributes a temporary password out of band.
+- Password reset and invitation delivery are not implemented. An authorized staff member must securely deliver the one-time temporary password from the account-creation response.
 - No M2/M1/M3/etc. domain records exist yet, so parent/teacher/student object-scope authorization is not implementable in this foundation pass. Add and test those checks in each domain service before exposing data.
 - Web sign-in is memory-only. Reloading or closing the tab requires signing in again; choose an approved same-site HttpOnly cookie/CSRF design before production persistence.
 - Automated authentication, session-rotation, rate-limit, role-denial, and object-scope tests have not been added or run in this change.

@@ -131,8 +131,12 @@ const hi = {
   pageOf: "पृष्ठ {{page}}, कुल {{pages}}",
   previous: "पिछला",
   next: "अगला",
-  accountCreated: "खाता बन गया। प्रारंभिक पासवर्ड सुरक्षित रूप से साझा करें।",
-  passwordMinimum: "कम से कम 12 अक्षरों का पासवर्ड रखें।",
+  accountCreated: "खाता बन गया। अस्थायी साइन-इन विवरण अभी कॉपी करें।",
+  passwordMinimum: "कम से कम 8 अक्षरों का पासवर्ड रखें।",
+  generatedPasswordNotice:
+    "सुरक्षित अस्थायी पासवर्ड अपने-आप बनाया जाएगा और केवल एक बार दिखेगा। इसे सुरक्षित रूप से साझा करें; पहली बार साइन इन करने पर उपयोगकर्ता को इसे बदलना होगा।",
+  temporaryCredentials: "अस्थायी साइन-इन विवरण",
+  copyPassword: "पासवर्ड कॉपी करें",
   apiConnection: "एपीआई कनेक्शन",
   signInAgain: "आपका सत्र समाप्त हो गया। फिर से साइन इन करें।",
   forbidden: "आपके खाते को इस पृष्ठ की अनुमति नहीं है।",
@@ -233,6 +237,33 @@ const hi = {
   withdrawn: "नाम वापस लिया",
   transferred: "स्थानांतरित",
   pagination: "पृष्ठ नेविगेशन",
+  sourceAcademicYear: "पिछला पूरा किया गया शैक्षणिक वर्ष",
+  targetAcademicYear: "अगला शैक्षणिक वर्ष",
+  targetSection: "नई कक्षा/सेक्शन",
+  promoteStudents: "विद्यार्थियों को अगली कक्षा में भेजें",
+  promotionDescription:
+    "पूरा हुआ वर्ष चुनें, उसके बाद का वर्ष चुनें और हर विद्यार्थी का नया सेक्शन तय करें। हर विद्यार्थी अलग से संसाधित होगा; असफल पंक्तियों को सुरक्षित रूप से फिर भेज सकते हैं।",
+  selectStudentsForPromotion: "आगे बढ़ाने के लिए विद्यार्थी चुनें।",
+  noTargetSections: "पहले अगले वर्ष के लिए सक्रिय सेक्शन बनाएँ।",
+  promoteSelected: "चुने हुए विद्यार्थियों को आगे बढ़ाएँ",
+  promotionResults: "प्रमोशन परिणाम",
+  promotionSummary:
+    "{{promoted}} आगे बढ़े · {{alreadyPromoted}} पहले से आगे बढ़े · {{failed}} विफल",
+  promotionCanRetry:
+    "उन्हीं विद्यार्थियों को फिर भेज सकते हैं। सफल प्रमोशन से दोहरा नामांकन नहीं बनेगा।",
+  promoted: "आगे बढ़ाया गया",
+  alreadyPromoted: "पहले से आगे बढ़ाया गया",
+  archiveStudent: "अभिलेख में रखें",
+  reactivateStudent: "फिर सक्रिय करें",
+  confirmArchiveStudent:
+    "इस विद्यार्थी को अभिलेख में रखें? उसका रिकॉर्ड और नामांकन इतिहास अधिकृत कर्मचारियों को उपलब्ध रहेगा।",
+  updateGuardianRelationship: "अभिभावक संबंध बदलें",
+  relationshipEnded: "संबंध समाप्त",
+  endRelationship: "संबंध समाप्त करें",
+  confirmEndGuardianRelationship:
+    "क्या इस विद्यार्थी के लिए अभिभावक की पहुँच समाप्त करें? संबंध का इतिहास सुरक्षित रहेगा।",
+  yes: "हाँ",
+  no: "नहीं",
 } as const;
 
 export default hi;

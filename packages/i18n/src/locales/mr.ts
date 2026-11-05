@@ -131,8 +131,12 @@ const mr = {
   pageOf: "पृष्ठ {{page}} / {{pages}}",
   previous: "मागील",
   next: "पुढील",
-  accountCreated: "खाते तयार झाले. प्रारंभिक पासवर्ड सुरक्षितपणे द्या.",
-  passwordMinimum: "किमान 12 अक्षरांचा पासवर्ड वापरा.",
+  accountCreated: "खाते तयार झाले. तात्पुरते साइन-इन तपशील आता कॉपी करा.",
+  passwordMinimum: "किमान 8 अक्षरांचा पासवर्ड वापरा.",
+  generatedPasswordNotice:
+    "सुरक्षित तात्पुरता पासवर्ड आपोआप तयार होईल आणि फक्त एकदाच दिसेल. तो सुरक्षितपणे शेअर करा; पहिल्या साइन-इनवेळी वापरकर्त्याने तो बदलणे आवश्यक आहे.",
+  temporaryCredentials: "तात्पुरते साइन-इन तपशील",
+  copyPassword: "पासवर्ड कॉपी करा",
   apiConnection: "एपीआय जोडणी",
   signInAgain: "तुमचे सत्र संपले. पुन्हा साइन इन करा.",
   forbidden: "तुमच्या खात्याला या पृष्ठाची परवानगी नाही.",
@@ -230,6 +234,33 @@ const mr = {
   withdrawn: "मागे घेतले",
   transferred: "हस्तांतरित",
   pagination: "पृष्ठ नेव्हिगेशन",
+  sourceAcademicYear: "मागील पूर्ण झालेले शैक्षणिक वर्ष",
+  targetAcademicYear: "पुढील शैक्षणिक वर्ष",
+  targetSection: "नवीन तुकडी",
+  promoteStudents: "विद्यार्थ्यांना पुढील वर्गात पाठवा",
+  promotionDescription:
+    "पूर्ण झालेले वर्ष, त्यानंतरचे वर्ष आणि प्रत्येक विद्यार्थ्याची नवीन तुकडी निवडा. प्रत्येक विद्यार्थ्यावर स्वतंत्र प्रक्रिया होईल; अयशस्वी नोंदी पुन्हा सुरक्षितपणे पाठवता येतील.",
+  selectStudentsForPromotion: "पुढे पाठवण्यासाठी विद्यार्थी निवडा.",
+  noTargetSections: "आधी पुढील वर्षासाठी सक्रिय तुकडी तयार करा.",
+  promoteSelected: "निवडलेले विद्यार्थी पुढे पाठवा",
+  promotionResults: "प्रमोशनचे परिणाम",
+  promotionSummary:
+    "{{promoted}} पुढे पाठवले · {{alreadyPromoted}} आधीच पुढे पाठवले · {{failed}} अयशस्वी",
+  promotionCanRetry:
+    "त्याच विद्यार्थ्यांची विनंती पुन्हा पाठवू शकता. यशस्वी प्रमोशनमुळे दुबार नोंदणी तयार होणार नाही.",
+  promoted: "पुढे पाठवले",
+  alreadyPromoted: "आधीच पुढे पाठवले",
+  archiveStudent: "संग्रहित करा",
+  reactivateStudent: "पुन्हा सक्रिय करा",
+  confirmArchiveStudent:
+    "हा विद्यार्थी संग्रहित करायचा? त्याची नोंद आणि नोंदणी इतिहास अधिकृत कर्मचाऱ्यांना उपलब्ध राहील.",
+  updateGuardianRelationship: "पालकाचे नाते बदला",
+  relationshipEnded: "नाते समाप्त",
+  endRelationship: "नाते समाप्त करा",
+  confirmEndGuardianRelationship:
+    "या विद्यार्थ्यासाठी पालकाचा प्रवेश समाप्त करायचा? नात्याचा इतिहास जतन केला जाईल.",
+  yes: "होय",
+  no: "नाही",
 } as const;
 
 export default mr;

@@ -6,7 +6,12 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import { fetchApi, setApiSession } from "../../lib/api-client";
+import {
+  fetchApi,
+  getStoredSessionUser,
+  setApiSession,
+  updateStoredSessionUser,
+} from "../../lib/api-client";
 
 export interface SignedInUser {
   id: string;
@@ -33,11 +38,23 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: React.PropsWithChildren) {
-  const [user, setUser] = useState<SignedInUser | null>(null);
+  const [user, setUser] = useState<SignedInUser | null>(() =>
+    getStoredSessionUser<SignedInUser>() ?? null,
+  );
 
   useEffect(() => {
     const onSessionExpired = () => setUser(null);
     window.addEventListener("schoolerp:session-expired", onSessionExpired);
+    if (getStoredSessionUser<SignedInUser>()) {
+      // Revalidate the cached identity after a reload or when a suspended tab resumes.
+      // A temporary API outage should not discard the still-valid browser session.
+      void fetchApi<SignedInUser>("/api/v1/auth/me")
+        .then((currentUser) => {
+          updateStoredSessionUser(currentUser);
+          setUser(currentUser);
+        })
+        .catch(() => undefined);
+    }
     return () =>
       window.removeEventListener("schoolerp:session-expired", onSessionExpired);
   }, []);
@@ -47,7 +64,7 @@ export function AuthProvider({ children }: React.PropsWithChildren) {
       method: "POST",
       body: JSON.stringify({ email, password }),
     });
-    setApiSession(tokens);
+    setApiSession({ ...tokens, user: tokens.user });
     setUser(tokens.user);
   }, []);
 

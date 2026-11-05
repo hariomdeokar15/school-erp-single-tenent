@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Permission } from "@schoolerp/contracts";
 import { fetchApi } from "../../lib/api-client";
@@ -144,14 +149,16 @@ export function StudentProfilePage() {
             title={t("linkAccount")}
             path={`/api/v1/students/${encodeURIComponent(id)}/link-account`}
             method="PATCH"
-            fields={[{
-              name: "userId",
-              label: "user",
-              type: "select",
-              optionPath: "/api/v1/auth/users",
-              optionLabelFields: ["displayName", "email"],
-              required: true,
-            }]}
+            fields={[
+              {
+                name: "userId",
+                label: "user",
+                type: "select",
+                optionPath: "/api/v1/auth/users",
+                optionLabelFields: ["displayName", "email"],
+                required: true,
+              },
+            ]}
             invalidate={[["student", id]]}
           />
         </div>
@@ -216,14 +223,56 @@ function StudentGuardians({ studentId }: { studentId: string }) {
               </p>
               <p className="mt-1 text-sm text-slate-500">
                 {String(item.relationship ?? "")}
+                {item.isPrimaryContact === true && ` · ${t("primaryContact")}`}
               </p>
+              {Boolean(item.endedAt) && (
+                <p className="mt-2 text-xs font-medium text-slate-500">
+                  {t("relationshipEnded")}: {String(item.endedAt)}
+                </p>
+              )}
               {typeof item.email === "string" && item.email.length > 0 && (
                 <p className="mt-2 text-sm text-slate-600">{item.email}</p>
               )}
               {typeof item.phone === "string" && item.phone.length > 0 && (
                 <p className="text-sm text-slate-600">{item.phone}</p>
               )}
-              {!item.hasPortalAccount && (
+              {!item.endedAt && (
+                <details className="mt-3 border-t border-slate-100 pt-3">
+                  <summary className="cursor-pointer text-sm font-medium text-indigo-700">
+                    {t("updateGuardianRelationship")}
+                  </summary>
+                  <ActionForm
+                    title={t("updateGuardianRelationship")}
+                    path={`/api/v1/students/${encodeURIComponent(studentId)}/guardians/${encodeURIComponent(String(item.linkId ?? ""))}`}
+                    method="PATCH"
+                    fields={[
+                      {
+                        name: "relationship",
+                        label: "relationship",
+                        required: true,
+                        defaultValue: String(item.relationship ?? ""),
+                      },
+                      {
+                        name: "isPrimaryContact",
+                        label: "primaryContact",
+                        type: "select",
+                        valueType: "boolean",
+                        defaultValue: item.isPrimaryContact ? "true" : "false",
+                        options: [
+                          { value: "true", label: t("yes") },
+                          { value: "false", label: t("no") },
+                        ],
+                      },
+                    ]}
+                    invalidate={[["student-guardians", studentId]]}
+                  />
+                  <EndGuardianRelationship
+                    studentId={studentId}
+                    linkId={String(item.linkId ?? "")}
+                  />
+                </details>
+              )}
+              {!item.endedAt && !item.hasPortalAccount && (
                 <details className="mt-3 border-t border-slate-100 pt-3">
                   <summary className="cursor-pointer text-sm font-medium text-indigo-700">
                     {t("linkAccount")}
@@ -258,6 +307,51 @@ function StudentGuardians({ studentId }: { studentId: string }) {
   );
 }
 
+function EndGuardianRelationship({
+  studentId,
+  linkId,
+}: {
+  studentId: string;
+  linkId: string;
+}) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: () =>
+      fetchApi(
+        `/api/v1/students/${encodeURIComponent(studentId)}/guardians/${encodeURIComponent(linkId)}/end`,
+        {
+          method: "POST",
+        },
+      ),
+    onSuccess: async () =>
+      queryClient.invalidateQueries({
+        queryKey: ["student-guardians", studentId],
+      }),
+  });
+  return (
+    <div className="mt-3 flex flex-wrap items-center gap-3">
+      <button
+        type="button"
+        disabled={mutation.isPending}
+        onClick={() => {
+          if (window.confirm(t("confirmEndGuardianRelationship"))) {
+            mutation.mutate();
+          }
+        }}
+        className="min-h-9 rounded-lg border border-red-200 px-3 text-xs font-semibold text-red-700 disabled:opacity-50"
+      >
+        {mutation.isPending ? t("saving") : t("endRelationship")}
+      </button>
+      {mutation.isError && (
+        <span role="alert" className="text-xs text-red-700">
+          {t("requestFailed")}
+        </span>
+      )}
+    </div>
+  );
+}
+
 type ActionField = {
   name: string;
   label: string;
@@ -268,6 +362,7 @@ type ActionField = {
   optionPath?: string;
   optionLabelFields?: string[];
   dependsOn?: string;
+  valueType?: "boolean";
 };
 function ActionForm({
   title,
@@ -287,19 +382,34 @@ function ActionForm({
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [message, setMessage] = useState("");
-  const [selectedValues, setSelectedValues] = useState<Record<string, string>>({});
-  const optionPaths = [...new Set(fields.map((field) => field.optionPath).filter((value): value is string => Boolean(value)))];
+  const [selectedValues, setSelectedValues] = useState<Record<string, string>>(
+    {},
+  );
+  const optionPaths = [
+    ...new Set(
+      fields
+        .map((field) => field.optionPath)
+        .filter((value): value is string => Boolean(value)),
+    ),
+  ];
   const optionQueries = useQueries({
     queries: optionPaths.map((optionPath) => ({
       queryKey: ["student-action-options", optionPath],
-      queryFn: () => fetchApi<{ items: Record<string, unknown>[] } | Record<string, unknown>[]>(`${optionPath}${optionPath.includes("?") ? "&" : "?"}page=1&pageSize=100`),
+      queryFn: () =>
+        fetchApi<
+          { items: Record<string, unknown>[] } | Record<string, unknown>[]
+        >(
+          `${optionPath}${optionPath.includes("?") ? "&" : "?"}page=1&pageSize=100`,
+        ),
       staleTime: 60_000,
     })),
   });
-  const optionsByPath = new Map(optionPaths.map((optionPath, index) => {
-    const data = optionQueries[index]?.data;
-    return [optionPath, Array.isArray(data) ? data : data?.items ?? []];
-  }));
+  const optionsByPath = new Map(
+    optionPaths.map((optionPath, index) => {
+      const data = optionQueries[index]?.data;
+      return [optionPath, Array.isArray(data) ? data : (data?.items ?? [])];
+    }),
+  );
   const mutation = useMutation({
     mutationFn: (payload: Record<string, unknown>) =>
       fetchApi(path, { method, body: JSON.stringify(payload) }),
@@ -323,8 +433,10 @@ function ActionForm({
         const payload: Record<string, unknown> = {};
         fields.forEach((field) => {
           const value = String(data.get(field.name) ?? "").trim();
-          if (value) payload[field.name] = value;
-          else if (field.required) setMessage(t("requiredField"));
+          if (value) {
+            payload[field.name] =
+              field.valueType === "boolean" ? value === "true" : value;
+          } else if (field.required) setMessage(t("requiredField"));
         });
         if (
           fields.some(
@@ -347,16 +459,26 @@ function ActionForm({
             type={field.type}
             required={field.required}
             defaultValue={field.defaultValue}
-            options={getActionFieldOptions(field, optionsByPath, selectedValues)}
+            options={getActionFieldOptions(
+              field,
+              optionsByPath,
+              selectedValues,
+            )}
             value={selectedValues[field.name] ?? field.defaultValue ?? ""}
-            disabled={Boolean(field.dependsOn && !selectedValues[field.dependsOn])}
-            onChange={(value) => setSelectedValues((current) => {
-              const updated = { ...current, [field.name]: value };
-              fields.filter((dependent) => dependent.dependsOn === field.name).forEach((dependent) => {
-                updated[dependent.name] = "";
-              });
-              return updated;
-            })}
+            disabled={Boolean(
+              field.dependsOn && !selectedValues[field.dependsOn],
+            )}
+            onChange={(value) =>
+              setSelectedValues((current) => {
+                const updated = { ...current, [field.name]: value };
+                fields
+                  .filter((dependent) => dependent.dependsOn === field.name)
+                  .forEach((dependent) => {
+                    updated[dependent.name] = "";
+                  });
+                return updated;
+              })
+            }
           />
         ))}
       </div>
@@ -437,18 +559,33 @@ function getActionFieldOptions(
 ): { value: string; label: string }[] {
   if (field.options) return field.options;
   if (!field.optionPath) return [];
-  const dependency = field.dependsOn ? selectedValues[field.dependsOn] : undefined;
+  const dependency = field.dependsOn
+    ? selectedValues[field.dependsOn]
+    : undefined;
   return (optionsByPath.get(field.optionPath) ?? [])
-    .filter((item) => !field.dependsOn || (Boolean(dependency) && item.academicYearId === dependency))
+    .filter(
+      (item) =>
+        !field.dependsOn ||
+        (Boolean(dependency) && item.academicYearId === dependency),
+    )
     .map((item) => {
       const label = (field.optionLabelFields ?? ["name", "code", "email"])
-        .map((key) => key.split(".").reduce<unknown>((current, part) => {
-          if (typeof current !== "object" || current === null) return undefined;
-          return (current as Record<string, unknown>)[part];
-        }, item))
-        .filter((value): value is string => typeof value === "string" && Boolean(value.trim()))
+        .map((key) =>
+          key.split(".").reduce<unknown>((current, part) => {
+            if (typeof current !== "object" || current === null)
+              return undefined;
+            return (current as Record<string, unknown>)[part];
+          }, item),
+        )
+        .filter(
+          (value): value is string =>
+            typeof value === "string" && Boolean(value.trim()),
+        )
         .join(" · ");
-      return { value: String(item.id ?? ""), label: label || String(item.id ?? "") };
+      return {
+        value: String(item.id ?? ""),
+        label: label || String(item.id ?? ""),
+      };
     })
     .filter((option) => option.value.length > 0);
 }

@@ -9,6 +9,7 @@ import { DashboardRouter } from "../features/dashboards/shared/DashboardRouter";
 import { AcademicPage, MyClassesPage } from "../features/academic/AcademicPage";
 import { StudentProfilePage } from "../features/students/StudentProfilePage";
 import { StudentsPage } from "../features/students/StudentsPage";
+import { StudentPromotionPage } from "../features/students/StudentPromotionPage";
 import { StaffUsersPage } from "../features/staff/StaffUsersPage";
 
 export function AppRoutes() {
@@ -55,6 +56,14 @@ export function AppRoutes() {
               element={
                 <PermissionRoute permission="student:read">
                   <StudentProfilePage />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="students/promote"
+              element={
+                <PermissionRoute permission="student:write">
+                  <StudentPromotionPage />
                 </PermissionRoute>
               }
             />
