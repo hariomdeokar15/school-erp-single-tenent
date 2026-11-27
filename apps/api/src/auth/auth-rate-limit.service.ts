@@ -18,17 +18,81 @@ const INCREMENT_WITH_TTL = `
 export class AuthRateLimitService implements OnModuleDestroy {
   private readonly redis: Redis;
   private readonly digestKey: string;
+  private readonly resetIpBurstLimit: number;
+  private readonly resetIpHourlyLimit: number;
 
   constructor(config: ConfigService) {
     this.digestKey =
       config.get<string>("auth.privateKey") ||
       "local-development-rate-limit-key";
+    this.resetIpBurstLimit = config.get<number>(
+      "rateLimit.resetIpBurstLimit",
+      30,
+    );
+    this.resetIpHourlyLimit = config.get<number>(
+      "rateLimit.resetIpHourlyLimit",
+      300,
+    );
     this.redis = new Redis(config.get<string>("redis.url")!, {
       maxRetriesPerRequest: 1,
       connectTimeout: 1500,
       enableOfflineQueue: false,
       retryStrategy: (attempt) => (attempt <= 3 ? attempt * 200 : null),
     });
+  }
+
+  async checkResetRequest(email: string, ipAddress: string): Promise<boolean> {
+    try {
+      const burst = await this.increment(
+        `auth:reset:ip:burst:${this.digest(ipAddress)}`,
+        60_000,
+      );
+      const hourly = await this.increment(
+        `auth:reset:ip:hour:${this.digest(ipAddress)}`,
+        60 * 60_000,
+      );
+      if (burst > this.resetIpBurstLimit || hourly > this.resetIpHourlyLimit) {
+        throw new HttpException("Too many requests. Try again later.", 429);
+      }
+      const accountKey = `auth:reset:account:hour:${this.digest(email)}`;
+      const accountCount = await this.increment(accountKey, 60 * 60_000);
+      const cooldown = await this.redis.set(
+        `auth:reset:account:cooldown:${this.digest(email)}`,
+        "1",
+        "PX",
+        60_000,
+        "NX",
+      );
+      return accountCount <= 3 && cooldown === "OK";
+    } catch (error) {
+      if (error instanceof HttpException && error.getStatus() === 429)
+        throw error;
+      throw new ServiceUnavailableException(
+        "Password recovery is temporarily unavailable.",
+      );
+    }
+  }
+
+  async checkResetRedemption(token: string, ipAddress: string): Promise<void> {
+    try {
+      const burst = await this.increment(
+        `auth:reset:redeem:ip:${this.digest(ipAddress)}`,
+        60_000,
+      );
+      const tokenCount = await this.increment(
+        `auth:reset:redeem:token:${this.digest(token)}`,
+        60 * 60_000,
+      );
+      if (burst > 10 || tokenCount > 5) {
+        throw new HttpException("Too many attempts. Try again later.", 429);
+      }
+    } catch (error) {
+      if (error instanceof HttpException && error.getStatus() === 429)
+        throw error;
+      throw new ServiceUnavailableException(
+        "Password recovery is temporarily unavailable.",
+      );
+    }
   }
 
   async checkLogin(email: string, ipAddress: string): Promise<void> {

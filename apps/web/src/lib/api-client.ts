@@ -103,6 +103,9 @@ async function rawFetch<T>(
     ...options,
     headers: {
       "Content-Type": "application/json",
+      ...(typeof document !== "undefined" && document.documentElement.lang
+        ? { "Accept-Language": document.documentElement.lang.slice(0, 2) }
+        : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options?.headers,
     },

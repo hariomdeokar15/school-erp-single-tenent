@@ -253,6 +253,14 @@ export function WorkspaceLayout() {
           </div>
         </header>
         <main className="mx-auto w-full max-w-7xl p-4 sm:p-6 lg:p-8">
+          {user && !user.emailVerified && !user.mustChangePassword && (
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
+              <span>{t("recoveryEmailNotVerified")}</span>
+              <NavLink className="font-semibold underline" to="/verify-email">
+                {t("verifyRecoveryEmail")}
+              </NavLink>
+            </div>
+          )}
           <Outlet />
         </main>
       </div>

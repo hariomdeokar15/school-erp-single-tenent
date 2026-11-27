@@ -6,6 +6,7 @@ export interface AuthenticatedUser {
   displayName: string;
   sessionId: string;
   mustChangePassword: boolean;
+  emailVerified: boolean;
   roles: UserRole[];
   permissions: Permission[];
 }

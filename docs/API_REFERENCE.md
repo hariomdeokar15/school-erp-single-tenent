@@ -77,6 +77,35 @@ No body. Revokes the current session. The `Authorization: Bearer <accessToken>` 
 
 The new password must contain at least 8 characters. Existing sessions are revoked.
 
+### `POST /auth/recovery-email/verification` — authenticated
+
+Requires the current password again. Sends a single-use verification link to the account's stored email. Email verification is required before password recovery is available. Existing accounts are not presumed verified.
+
+### `POST /auth/verify-email` — public
+
+```json
+{ "token": "<single-use-email-verification-token>" }
+```
+
+### `POST /auth/forgot-password` — public
+
+```json
+{ "email": "parent@example.com" }
+```
+
+Always returns a generic eligibility message for validly formatted requests. Unknown, disabled, and unverified accounts are not identified.
+
+### `POST /auth/reset-password` — public
+
+```json
+{
+  "token": "<single-use-reset-token>",
+  "newPassword": "Your-New-Long-Test-Password"
+}
+```
+
+Reset links expire after 15 minutes. A successful reset changes the Argon2id hash, revokes every session, invalidates other outstanding reset links, and requires sign-in again.
+
 ### `GET /auth/users` — `user:manage`
 
 No body. Optional query: `?page=1&pageSize=25`.

@@ -20,6 +20,7 @@ export interface SignedInUser {
   roles: string[];
   permissions: string[];
   mustChangePassword: boolean;
+  emailVerified: boolean;
 }
 
 interface TokenPair {
@@ -38,8 +39,8 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: React.PropsWithChildren) {
-  const [user, setUser] = useState<SignedInUser | null>(() =>
-    getStoredSessionUser<SignedInUser>() ?? null,
+  const [user, setUser] = useState<SignedInUser | null>(
+    () => getStoredSessionUser<SignedInUser>() ?? null,
   );
 
   useEffect(() => {
