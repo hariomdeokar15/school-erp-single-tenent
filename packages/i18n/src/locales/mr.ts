@@ -15,6 +15,46 @@ const mr = {
   signIn: "साइन इन करा",
   email: "ईमेल",
   password: "पासवर्ड",
+  forgotPassword: "पासवर्ड विसरलात?",
+  forgotPasswordHelp:
+    "तुमच्या खात्याचा ईमेल द्या. खाते पात्र असल्यास अल्पकालीन रीसेट लिंक पाठवली जाईल.",
+  sendResetLink: "रीसेट लिंक पाठवा",
+  recoveryGenericSuccess:
+    "हे खाते पात्र असल्यास, तुम्हाला लवकरच पासवर्ड रीसेट लिंक मिळेल.",
+  recoveryRateLimited: "खूप विनंत्या झाल्या. कृपया थांबून पुन्हा प्रयत्न करा.",
+  recoveryRequestFailed:
+    "रीसेट लिंकची विनंती करता आली नाही. कृपया पुन्हा प्रयत्न करा.",
+  resetPassword: "पासवर्ड रीसेट करा",
+  resetPasswordSuccess: "पासवर्ड रीसेट झाला. नवीन पासवर्डने साइन इन करा.",
+  resetPasswordFailed: "पासवर्ड रीसेट करता आला नाही. कृपया पुन्हा प्रयत्न करा.",
+  resetLinkInvalid: "ही रीसेट लिंक अवैध किंवा कालबाह्य आहे. दुसरी लिंक मागवा.",
+  requestAnotherReset: "दुसरी रीसेट लिंक मागवा",
+  backToSignIn: "साइन इनकडे परत जा",
+  verifyRecoveryEmail: "रिकव्हरी ईमेल सत्यापित करा",
+  verifyRecoveryEmailHelp:
+    "तुमचा सध्याचा पासवर्ड द्या. खात्यातील ईमेलवर सत्यापन लिंक पाठवू.",
+  sendVerificationLink: "सत्यापन लिंक पाठवा",
+  verificationLinkSent:
+    "पात्र असल्यास, खात्यातील ईमेलवर सत्यापन लिंक पाठवली जाईल.",
+  verificationRequestFailed:
+    "ईमेल सत्यापन लिंकची विनंती करता आली नाही. कृपया पुन्हा प्रयत्न करा.",
+  confirmEmail: "ईमेलची पुष्टी करा",
+  emailVerifiedSuccess: "ईमेल सत्यापित झाला. आता पासवर्ड रिकव्हरी उपलब्ध आहे.",
+  emailAlreadyVerified: "तुमच्या खात्याचा ईमेल आधीच सत्यापित आहे.",
+  verificationLinkInvalid:
+    "ही सत्यापन लिंक अवैध किंवा कालबाह्य आहे. साइन इन करून नवीन लिंक मागवा.",
+  recoveryEmailNotVerified:
+    "पासवर्ड रिकव्हरी सुरू करण्यासाठी खात्यातील ईमेल सत्यापित करा.",
+  backToDashboard: "डॅशबोर्डवर परत जा",
+  emailVerifySubject: "तुमचा SchoolERP ईमेल सत्यापित करा",
+  emailResetSubject: "तुमचा SchoolERP पासवर्ड रीसेट करा",
+  emailResetCompleteSubject: "तुमचा SchoolERP पासवर्ड बदलला आहे",
+  emailVerifyBody:
+    "तुमच्या खात्यातील ईमेल सत्यापित करण्यासाठी ही लिंक वापरा: {{link}}\n\nही लिंक 30 मिनिटांत कालबाह्य होईल आणि एकदाच वापरता येईल. ही विनंती तुम्ही केली नसेल तर हा ईमेल दुर्लक्षित करा.",
+  emailResetBody:
+    "पासवर्ड रीसेट करण्यासाठी ही लिंक वापरा: {{link}}\n\nही लिंक 15 मिनिटांत कालबाह्य होईल आणि एकदाच वापरता येईल. ही विनंती तुम्ही केली नसेल तर हा ईमेल दुर्लक्षित करा.",
+  emailResetCompleteBody:
+    "तुमचा SchoolERP पासवर्ड बदलला आहे. ही विनंती तुम्ही केली नसेल तर शाळेच्या प्रशासकाशी संपर्क साधा.",
   currentPassword: "सध्याचा पासवर्ड",
   newPassword: "नवीन पासवर्ड",
   changePassword: "पासवर्ड बदला",

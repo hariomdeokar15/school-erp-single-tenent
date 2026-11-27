@@ -15,6 +15,47 @@ const en = {
   signIn: "Sign in",
   email: "Email",
   password: "Password",
+  forgotPassword: "Forgot password?",
+  forgotPasswordHelp:
+    "Enter your account email. If it is eligible, we will send a short-lived reset link.",
+  sendResetLink: "Send reset link",
+  recoveryGenericSuccess:
+    "If this account is eligible, you will receive a password-reset link shortly.",
+  recoveryRateLimited: "Too many requests. Please wait and try again.",
+  recoveryRequestFailed: "Could not request a reset link. Please try again.",
+  resetPassword: "Reset password",
+  resetPasswordSuccess:
+    "Your password has been reset. Sign in with your new password.",
+  resetPasswordFailed: "Could not reset the password. Please try again.",
+  resetLinkInvalid:
+    "This reset link is invalid or expired. Request another link.",
+  requestAnotherReset: "Request another reset link",
+  backToSignIn: "Back to sign in",
+  verifyRecoveryEmail: "Verify recovery email",
+  verifyRecoveryEmailHelp:
+    "Confirm your current password. We will send a verification link to the email on your account.",
+  sendVerificationLink: "Send verification link",
+  verificationLinkSent:
+    "If eligible, a verification link will be sent to your account email.",
+  verificationRequestFailed:
+    "Could not request an email verification link. Please try again.",
+  confirmEmail: "Confirm email",
+  emailVerifiedSuccess: "Email verified. Password recovery is now available.",
+  emailAlreadyVerified: "Your account email is already verified.",
+  verificationLinkInvalid:
+    "This verification link is invalid or expired. Request another link after signing in.",
+  recoveryEmailNotVerified:
+    "Verify your account email to enable password recovery.",
+  backToDashboard: "Back to dashboard",
+  emailVerifySubject: "Verify your SchoolERP email",
+  emailResetSubject: "Reset your SchoolERP password",
+  emailResetCompleteSubject: "Your SchoolERP password was changed",
+  emailVerifyBody:
+    "Use this link to verify the email on your account: {{link}}\n\nThis link expires in 30 minutes and can only be used once. If you did not request this, ignore this email.",
+  emailResetBody:
+    "Use this link to reset your password: {{link}}\n\nThis link expires in 15 minutes and can only be used once. If you did not request this, ignore this email.",
+  emailResetCompleteBody:
+    "Your SchoolERP password was changed. If you did not request this, contact your school administrator.",
   currentPassword: "Current password",
   newPassword: "New password",
   changePassword: "Change password",

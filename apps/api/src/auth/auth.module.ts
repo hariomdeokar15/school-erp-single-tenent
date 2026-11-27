@@ -12,17 +12,33 @@ import { AuthService } from "./auth.service";
 import { AuthSession } from "./entities/auth-session.entity";
 import { RoleAssignment } from "./entities/role-assignment.entity";
 import { User } from "./entities/user.entity";
+import { EmailVerificationToken } from "./entities/email-verification-token.entity";
+import { PasswordResetToken } from "./entities/password-reset-token.entity";
+import { EmailOutbox } from "./entities/email-outbox.entity";
+import { EmailOutboxCryptoService } from "./email-outbox-crypto.service";
+import { EmailOutboxService } from "./email-outbox.service";
+import { AuthMailService } from "./auth-mail.service";
 
 @Module({
   imports: [
     ConfigModule,
     JwtModule.register({}),
-    TypeOrmModule.forFeature([User, RoleAssignment, AuthSession]),
+    TypeOrmModule.forFeature([
+      User,
+      RoleAssignment,
+      AuthSession,
+      EmailVerificationToken,
+      PasswordResetToken,
+      EmailOutbox,
+    ]),
     AuditModule,
   ],
   controllers: [AuthController],
   providers: [
     AuthService,
+    EmailOutboxCryptoService,
+    EmailOutboxService,
+    AuthMailService,
     AuthRateLimitService,
     AuthenticationGuard,
     AuthorizationGuard,

@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { EntityManager, Repository } from "typeorm";
 import { AuditEvent } from "../entities/audit-event.entity";
 
 export interface CreateAuditEventInput {
@@ -22,8 +22,14 @@ export class AuditService {
     private readonly auditRepository: Repository<AuditEvent>,
   ) {}
 
-  async recordEvent(input: CreateAuditEventInput): Promise<AuditEvent> {
-    const event = this.auditRepository.create({
+  async recordEvent(
+    input: CreateAuditEventInput,
+    manager?: EntityManager,
+  ): Promise<AuditEvent> {
+    const repository = manager
+      ? manager.getRepository(AuditEvent)
+      : this.auditRepository;
+    const event = repository.create({
       actorId: input.actorId || null,
       actorRole: input.actorRole || null,
       action: input.action,
@@ -36,6 +42,6 @@ export class AuditService {
     });
 
     // Callers must not silently continue when a required audit write fails.
-    return this.auditRepository.save(event);
+    return repository.save(event);
   }
 }

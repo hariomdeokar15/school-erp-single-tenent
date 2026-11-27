@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "./AuthContext";
+import { Link } from "react-router-dom";
 import { isApiUnavailableError } from "../../lib/api-client";
 
 export function SignInPage() {
@@ -70,6 +71,14 @@ export function SignInPage() {
           onChange={(event) => setPassword(event.target.value)}
           className="w-full rounded-md border border-slate-300 px-3 py-2 mb-5"
         />
+        <div className="-mt-3 mb-5 text-right">
+          <Link
+            className="text-sm font-medium text-indigo-700 underline"
+            to="/forgot-password"
+          >
+            {t("forgotPassword")}
+          </Link>
+        </div>
         {error && (
           <p role="alert" className="text-sm text-red-700 mb-4">
             {error}

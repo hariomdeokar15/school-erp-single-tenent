@@ -26,6 +26,22 @@ import { LoginDto } from "./dto/login.dto";
 import { RefreshDto } from "./dto/refresh.dto";
 import { ListUsersDto } from "./dto/list-users.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
+import { ForgotPasswordDto } from "./dto/forgot-password.dto";
+import { ResetPasswordDto } from "./dto/reset-password.dto";
+import { BeginEmailVerificationDto } from "./dto/begin-email-verification.dto";
+import { VerifyEmailDto } from "./dto/verify-email.dto";
+import { SupportedLanguage } from "@schoolerp/i18n";
+
+function requestLanguage(request: Request): SupportedLanguage {
+  const accepted = request.get("accept-language")?.toLowerCase() || "en";
+  for (const language of accepted
+    .split(",")
+    .map((part) => part.split(";")[0].trim().split("-")[0])) {
+    if (language === "mr" || language === "hi") return language;
+    if (language === "en") return "en";
+  }
+  return "en";
+}
 
 @Controller("auth")
 export class AuthController {
@@ -52,6 +68,53 @@ export class AuthController {
     );
   }
 
+  @Public()
+  @Post("forgot-password")
+  forgotPassword(@Body() input: ForgotPasswordDto, @Req() request: Request) {
+    return this.auth.forgotPassword(
+      input.email,
+      request.ip || "unknown",
+      requestLanguage(request),
+    );
+  }
+
+  @Public()
+  @Post("reset-password")
+  resetPassword(@Body() input: ResetPasswordDto, @Req() request: Request) {
+    return this.auth.resetPassword(
+      input.token,
+      input.newPassword,
+      request.ip || "unknown",
+      requestLanguage(request),
+    );
+  }
+
+  @Authenticated()
+  @ApiBearerAuth()
+  @Post("recovery-email/verification")
+  beginEmailVerification(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() input: BeginEmailVerificationDto,
+    @Req() request: Request,
+  ) {
+    return this.auth.beginEmailVerification(
+      user,
+      input.currentPassword,
+      request.ip || "unknown",
+      requestLanguage(request),
+    );
+  }
+
+  @Public()
+  @Post("verify-email")
+  verifyEmail(@Body() input: VerifyEmailDto, @Req() request: Request) {
+    return this.auth.verifyEmail(
+      input.token,
+      request.ip || "unknown",
+      requestLanguage(request),
+    );
+  }
+
   @Authenticated()
   @ApiBearerAuth()
   @Get("me")
@@ -63,6 +126,7 @@ export class AuthController {
       roles: user.roles,
       permissions: user.permissions,
       mustChangePassword: user.mustChangePassword,
+      emailVerified: user.emailVerified,
     };
   }
 

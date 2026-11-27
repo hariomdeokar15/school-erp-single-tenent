@@ -4,6 +4,9 @@ import { AuditEvent } from "../audit/entities/audit-event.entity";
 import { User } from "../auth/entities/user.entity";
 import { RoleAssignment } from "../auth/entities/role-assignment.entity";
 import { AuthSession } from "../auth/entities/auth-session.entity";
+import { EmailVerificationToken } from "../auth/entities/email-verification-token.entity";
+import { PasswordResetToken } from "../auth/entities/password-reset-token.entity";
+import { EmailOutbox } from "../auth/entities/email-outbox.entity";
 import { AcademicYear } from "../academic/entities/academic-year.entity";
 import { Term } from "../academic/entities/term.entity";
 import { ClassLevel } from "../academic/entities/class-level.entity";
@@ -33,6 +36,9 @@ export const getTypeOrmConfig = (
       User,
       RoleAssignment,
       AuthSession,
+      EmailVerificationToken,
+      PasswordResetToken,
+      EmailOutbox,
       AcademicYear,
       Term,
       ClassLevel,

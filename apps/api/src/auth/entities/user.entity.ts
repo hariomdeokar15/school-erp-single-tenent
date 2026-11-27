@@ -41,6 +41,12 @@ export class User {
   @Column({ type: "boolean", default: true })
   mustChangePassword!: boolean;
 
+  @Column({ type: "integer", default: 1 })
+  emailVersion!: number;
+
+  @Column({ type: "timestamptz", nullable: true })
+  emailVerifiedAt!: Date | null;
+
   @OneToMany(() => RoleAssignment, (assignment) => assignment.user)
   roleAssignments!: RoleAssignment[];
 

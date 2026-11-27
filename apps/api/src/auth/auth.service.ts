@@ -1,6 +1,8 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
+  HttpException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -28,6 +30,12 @@ import { User, UserStatus } from "./entities/user.entity";
 import { AuthenticatedUser, AuthTokenPair } from "./auth.types";
 import { permissionsForRoles } from "./auth.permissions";
 import { AuthRateLimitService } from "./auth-rate-limit.service";
+import { EmailVerificationToken } from "./entities/email-verification-token.entity";
+import { PasswordResetToken } from "./entities/password-reset-token.entity";
+import { EmailOutboxKind } from "./entities/email-outbox.entity";
+import { EmailOutboxService } from "./email-outbox.service";
+import { SupportedLanguage } from "@schoolerp/i18n";
+import { locales } from "@schoolerp/i18n";
 
 const ACCESS_TOKEN_SECONDS = 15 * 60;
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
@@ -50,6 +58,7 @@ export class AuthService {
     private readonly config: ConfigService,
     private readonly audit: AuditService,
     private readonly rateLimit: AuthRateLimitService,
+    private readonly emailOutbox: EmailOutboxService,
   ) {
     const privateKey = config.get<string>("auth.privateKey")!;
     const publicKey = config.get<string>("auth.publicKey")!;
@@ -141,6 +150,368 @@ export class AuthService {
       userAgent,
     });
     return tokens;
+  }
+
+  async forgotPassword(
+    emailInput: string,
+    ipAddress: string,
+    language: SupportedLanguage = "en",
+  ) {
+    const requestStartedAt = Date.now();
+    const email = this.normalizeEmail(emailInput);
+    let allowed: boolean;
+    try {
+      allowed = await this.rateLimit.checkResetRequest(email, ipAddress);
+    } catch (error) {
+      if (error instanceof HttpException && error.getStatus() === 429) {
+        await this.audit.recordEvent({
+          action: "auth.password.reset.ip_rate_limited",
+          ipAddress,
+        });
+      }
+      throw error;
+    }
+    await this.dataSource.transaction(async (manager) => {
+      const user = await manager.getRepository(User).findOne({
+        where: { email, status: UserStatus.ACTIVE },
+        lock: { mode: "pessimistic_write" },
+      });
+      if (allowed && user?.emailVerifiedAt) {
+        const repository = manager.getRepository(PasswordResetToken);
+        const now = new Date();
+        const existing = await repository.find({
+          where: { userId: user.id, usedAt: IsNull() },
+          order: { createdAt: "ASC" },
+        });
+        const active = existing.filter((token) => token.expiresAt > now);
+        if (active.length >= 2) {
+          await repository.update(active[0].id, { usedAt: now });
+          await manager.query(
+            `UPDATE "email_outbox" SET "status"='EXPIRED',
+            "payloadCiphertext"=NULL, "payloadNonce"=NULL, "payloadTag"=NULL, "keyVersion"=NULL,
+            "leaseId"=NULL, "leaseExpiresAt"=NULL, "lastErrorCode"='superseded'
+            WHERE "resetTokenId"=$1 AND "status" IN ('QUEUED','PROCESSING')`,
+            [active[0].id],
+          );
+        }
+        const token = randomBytes(32).toString("base64url");
+        const expiresAt = new Date(Date.now() + this.resetTokenTtlMs());
+        const reset = await repository.save(
+          repository.create({
+            userId: user.id,
+            tokenHash: this.hash(token),
+            emailVersion: user.emailVersion,
+            language,
+            expiresAt,
+            usedAt: null,
+          }),
+        );
+        await this.emailOutbox.enqueueLink(manager, {
+          userId: user.id,
+          kind: EmailOutboxKind.PASSWORD_RESET,
+          tokenId: reset.id,
+          emailVersion: user.emailVersion,
+          language,
+          token,
+          expiresAt,
+        });
+      }
+      await this.audit.recordEvent(
+        {
+          action: allowed
+            ? "auth.password.reset.requested"
+            : "auth.password.reset.throttled",
+          ipAddress,
+        },
+        manager,
+      );
+    });
+    const remainingMs = 120 - (Date.now() - requestStartedAt);
+    if (remainingMs > 0) {
+      await new Promise((resolve) => setTimeout(resolve, remainingMs));
+    }
+    return { message: locales[language].recoveryGenericSuccess };
+  }
+
+  async resetPassword(
+    token: string,
+    newPassword: string,
+    ipAddress: string,
+    language: SupportedLanguage = "en",
+  ) {
+    try {
+      await this.rateLimit.checkResetRedemption(token, ipAddress);
+    } catch (error) {
+      if (error instanceof HttpException && error.getStatus() === 429) {
+        await this.audit.recordEvent({
+          action: "auth.password.reset.redemption_throttled",
+          ipAddress,
+        });
+      }
+      throw error;
+    }
+    if (!/^[A-Za-z0-9_-]{43}$/.test(token)) {
+      await this.audit.recordEvent({
+        action: "auth.password.reset.redemption_failed",
+        ipAddress,
+      });
+      throw new BadRequestException("This reset link is invalid or expired.");
+    }
+    const tokenHash = this.hash(token);
+    const passwordHash = await this.hashPassword(newPassword);
+    try {
+      await this.dataSource.transaction(async (manager) => {
+        const initial = await manager
+          .getRepository(PasswordResetToken)
+          .findOne({
+            where: { tokenHash },
+            select: { id: true, userId: true },
+          });
+        if (!initial)
+          throw new BadRequestException(
+            "This reset link is invalid or expired.",
+          );
+        const user = await manager
+          .getRepository(User)
+          .createQueryBuilder("user")
+          .where("user.id = :id", { id: initial.userId })
+          .setLock("pessimistic_write")
+          .getOne();
+        const reset = await manager
+          .getRepository(PasswordResetToken)
+          .createQueryBuilder("token")
+          .where("token.id = :id AND token.tokenHash = :tokenHash", {
+            id: initial.id,
+            tokenHash,
+          })
+          .setLock("pessimistic_write")
+          .getOne();
+        if (
+          !user ||
+          !reset ||
+          reset.usedAt ||
+          reset.expiresAt <= new Date() ||
+          user.status !== UserStatus.ACTIVE ||
+          !user.emailVerifiedAt ||
+          user.emailVersion !== reset.emailVersion
+        ) {
+          throw new BadRequestException(
+            "This reset link is invalid or expired.",
+          );
+        }
+        const now = new Date();
+        reset.usedAt = now;
+        await manager.getRepository(PasswordResetToken).save(reset);
+        await manager
+          .getRepository(User)
+          .update(user.id, { passwordHash, mustChangePassword: false });
+        await manager
+          .getRepository(AuthSession)
+          .update({ userId: user.id, revokedAt: IsNull() }, { revokedAt: now });
+        await manager
+          .getRepository(PasswordResetToken)
+          .update({ userId: user.id, usedAt: IsNull() }, { usedAt: now });
+        await manager.query(
+          `UPDATE "email_outbox" SET "status"='EXPIRED',
+        "payloadCiphertext"=NULL, "payloadNonce"=NULL, "payloadTag"=NULL, "keyVersion"=NULL,
+        "leaseId"=NULL, "leaseExpiresAt"=NULL, "lastErrorCode"='reset_completed'
+        WHERE "userId"=$1 AND "kind"='PASSWORD_RESET' AND "status" IN ('QUEUED','PROCESSING')`,
+          [user.id],
+        );
+        await this.emailOutbox.enqueueCompletion(manager, user, reset.language);
+        await this.audit.recordEvent(
+          {
+            actorId: user.id,
+            action: "auth.password.reset.succeeded",
+            entityName: "user",
+            entityId: user.id,
+            ipAddress,
+          },
+          manager,
+        );
+      });
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        await this.audit.recordEvent({
+          action: "auth.password.reset.redemption_failed",
+          ipAddress,
+        });
+      }
+      throw error;
+    }
+    return { message: locales[language].resetPasswordSuccess };
+  }
+
+  async beginEmailVerification(
+    actor: AuthenticatedUser,
+    currentPassword: string,
+    ipAddress: string,
+    language: SupportedLanguage = "en",
+  ) {
+    await this.dataSource.transaction(async (manager) => {
+      const locked = await manager
+        .getRepository(User)
+        .createQueryBuilder("user")
+        .addSelect("user.passwordHash")
+        .where("user.id = :id", { id: actor.id })
+        .setLock("pessimistic_write")
+        .getOne();
+      if (!locked || locked.status !== UserStatus.ACTIVE)
+        throw new UnauthorizedException("Account is unavailable.");
+      if (!(await argon2.verify(locked.passwordHash, currentPassword))) {
+        throw new UnauthorizedException("Current password is incorrect.");
+      }
+      if (locked.emailVerifiedAt) return;
+      const repository = manager.getRepository(EmailVerificationToken);
+      const now = new Date();
+      await repository.update(
+        { userId: locked.id, usedAt: IsNull() },
+        { usedAt: now },
+      );
+      await manager.query(
+        `UPDATE "email_outbox" SET "status"='EXPIRED',
+        "payloadCiphertext"=NULL, "payloadNonce"=NULL, "payloadTag"=NULL, "keyVersion"=NULL,
+        "leaseId"=NULL, "leaseExpiresAt"=NULL, "lastErrorCode"='superseded'
+        WHERE "userId"=$1 AND "kind"='VERIFY_EMAIL' AND "status" IN ('QUEUED','PROCESSING')`,
+        [locked.id],
+      );
+      const token = randomBytes(32).toString("base64url");
+      const expiresAt = new Date(Date.now() + 30 * 60_000);
+      const verification = await repository.save(
+        repository.create({
+          userId: locked.id,
+          tokenHash: this.hash(token),
+          emailVersion: locked.emailVersion,
+          language,
+          expiresAt,
+          usedAt: null,
+        }),
+      );
+      await this.emailOutbox.enqueueLink(manager, {
+        userId: locked.id,
+        kind: EmailOutboxKind.VERIFY_EMAIL,
+        tokenId: verification.id,
+        emailVersion: locked.emailVersion,
+        language,
+        token,
+        expiresAt,
+      });
+      await this.audit.recordEvent(
+        {
+          actorId: locked.id,
+          actorRole: actor.roles[0],
+          action: "auth.email.verification.requested",
+          entityName: "user",
+          entityId: locked.id,
+          ipAddress,
+        },
+        manager,
+      );
+    });
+    return { message: locales[language].verificationLinkSent };
+  }
+
+  async verifyEmail(
+    token: string,
+    ipAddress: string,
+    language: SupportedLanguage = "en",
+  ) {
+    try {
+      await this.rateLimit.checkResetRedemption(token, ipAddress);
+    } catch (error) {
+      if (error instanceof HttpException && error.getStatus() === 429) {
+        await this.audit.recordEvent({
+          action: "auth.email.verification.throttled",
+          ipAddress,
+        });
+      }
+      throw error;
+    }
+    if (!/^[A-Za-z0-9_-]{43}$/.test(token)) {
+      await this.audit.recordEvent({
+        action: "auth.email.verification.failed",
+        ipAddress,
+      });
+      throw new BadRequestException(
+        "This verification link is invalid or expired.",
+      );
+    }
+    const tokenHash = this.hash(token);
+    try {
+      await this.dataSource.transaction(async (manager) => {
+        const initial = await manager
+          .getRepository(EmailVerificationToken)
+          .findOne({
+            where: { tokenHash },
+            select: { id: true, userId: true },
+          });
+        if (!initial)
+          throw new BadRequestException(
+            "This verification link is invalid or expired.",
+          );
+        const user = await manager
+          .getRepository(User)
+          .createQueryBuilder("user")
+          .where("user.id = :id", { id: initial.userId })
+          .setLock("pessimistic_write")
+          .getOne();
+        const verification = await manager
+          .getRepository(EmailVerificationToken)
+          .createQueryBuilder("token")
+          .where("token.id = :id AND token.tokenHash = :tokenHash", {
+            id: initial.id,
+            tokenHash,
+          })
+          .setLock("pessimistic_write")
+          .getOne();
+        if (
+          !user ||
+          !verification ||
+          verification.usedAt ||
+          verification.expiresAt <= new Date() ||
+          user.status !== UserStatus.ACTIVE ||
+          user.emailVersion !== verification.emailVersion
+        ) {
+          throw new BadRequestException(
+            "This verification link is invalid or expired.",
+          );
+        }
+        const now = new Date();
+        verification.usedAt = now;
+        user.emailVerifiedAt = now;
+        await manager.getRepository(EmailVerificationToken).save(verification);
+        await manager.getRepository(User).save(user);
+        await manager
+          .getRepository(EmailVerificationToken)
+          .update({ userId: user.id, usedAt: IsNull() }, { usedAt: now });
+        await manager.query(
+          `UPDATE "email_outbox" SET "status"='EXPIRED',
+        "payloadCiphertext"=NULL, "payloadNonce"=NULL, "payloadTag"=NULL, "keyVersion"=NULL,
+        "leaseId"=NULL, "leaseExpiresAt"=NULL, "lastErrorCode"='verification_completed'
+        WHERE "userId"=$1 AND "kind"='VERIFY_EMAIL' AND "status" IN ('QUEUED','PROCESSING')`,
+          [user.id],
+        );
+        await this.audit.recordEvent(
+          {
+            actorId: user.id,
+            action: "auth.email.verified",
+            entityName: "user",
+            entityId: user.id,
+            ipAddress,
+          },
+          manager,
+        );
+      });
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        await this.audit.recordEvent({
+          action: "auth.email.verification.failed",
+          ipAddress,
+        });
+      }
+      throw error;
+    }
+    return { message: locales[language].emailVerifiedSuccess };
   }
 
   async refresh(
@@ -265,24 +636,26 @@ export class AuthService {
     newPassword: string,
     ipAddress: string,
   ): Promise<void> {
-    const dbUser = await this.users
-      .createQueryBuilder("user")
-      .addSelect("user.passwordHash")
-      .where("user.id = :id", { id: user.id })
-      .getOne();
-    if (
-      !dbUser ||
-      !(await argon2.verify(dbUser.passwordHash, currentPassword))
-    ) {
-      throw new UnauthorizedException("Current password is incorrect.");
-    }
-    if (currentPassword === newPassword) {
-      throw new ConflictException(
-        "Choose a password different from the current password.",
-      );
-    }
-    const newHash = await this.hashPassword(newPassword);
     await this.dataSource.transaction(async (manager) => {
+      const dbUser = await manager
+        .getRepository(User)
+        .createQueryBuilder("user")
+        .addSelect("user.passwordHash")
+        .where("user.id = :id", { id: user.id })
+        .setLock("pessimistic_write")
+        .getOne();
+      if (
+        !dbUser ||
+        !(await argon2.verify(dbUser.passwordHash, currentPassword))
+      ) {
+        throw new UnauthorizedException("Current password is incorrect.");
+      }
+      if (currentPassword === newPassword) {
+        throw new ConflictException(
+          "Choose a password different from the current password.",
+        );
+      }
+      const newHash = await this.hashPassword(newPassword);
       await manager.getRepository(User).update(user.id, {
         passwordHash: newHash,
         mustChangePassword: false,
@@ -293,14 +666,28 @@ export class AuthService {
           { userId: user.id, revokedAt: IsNull() },
           { revokedAt: new Date() },
         );
-    });
-    await this.audit.recordEvent({
-      actorId: user.id,
-      actorRole: user.roles[0],
-      action: "auth.password.changed",
-      entityName: "user",
-      entityId: user.id,
-      ipAddress,
+      const now = new Date();
+      await manager
+        .getRepository(PasswordResetToken)
+        .update({ userId: user.id, usedAt: IsNull() }, { usedAt: now });
+      await manager.query(
+        `UPDATE "email_outbox" SET "status"='EXPIRED',
+        "payloadCiphertext"=NULL, "payloadNonce"=NULL, "payloadTag"=NULL, "keyVersion"=NULL,
+        "leaseId"=NULL, "leaseExpiresAt"=NULL, "lastErrorCode"='password_changed'
+        WHERE "userId"=$1 AND "kind"='PASSWORD_RESET' AND "status" IN ('QUEUED','PROCESSING')`,
+        [user.id],
+      );
+      await this.audit.recordEvent(
+        {
+          actorId: user.id,
+          actorRole: user.roles[0],
+          action: "auth.password.changed",
+          entityName: "user",
+          entityId: user.id,
+          ipAddress,
+        },
+        manager,
+      );
     });
   }
 
@@ -569,6 +956,7 @@ export class AuthService {
         email: user.email,
         displayName: user.displayName,
         mustChangePassword: user.mustChangePassword,
+        emailVerified: user.emailVerified,
         roles: user.roles,
         permissions: user.permissions,
       },
@@ -586,6 +974,7 @@ export class AuthService {
       displayName: user.displayName,
       sessionId,
       mustChangePassword: user.mustChangePassword,
+      emailVerified: Boolean(user.emailVerifiedAt),
       roles,
       permissions: permissionsForRoles(roles),
     };
@@ -602,6 +991,12 @@ export class AuthService {
 
   private normalizeEmail(email: string): string {
     return email.trim().toLowerCase();
+  }
+
+  private resetTokenTtlMs(): number {
+    return (
+      (this.config.get<number>("auth.resetTokenTtlMinutes") || 15) * 60_000
+    );
   }
 
   private hash(value: string): string {
