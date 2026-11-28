@@ -98,6 +98,10 @@ schoolerp/
    - **Web App**: `pnpm --filter @schoolerp/web dev` (runs on `http://localhost:3001`)
    - **Mobile App**: `pnpm --filter @schoolerp/mobile start`
 
+### Quick Start on Windows
+
+After completing the setup above, double-click `run-project.bat` whenever you want to start the local database, API, and web app. It opens the API and web app in separate terminal windows and opens the web app at `http://localhost:3001`. Keep both terminal windows open while you work; close them to stop the app processes. Docker services can be stopped with `docker compose down`.
+
 ---
 
 ## Available Commands

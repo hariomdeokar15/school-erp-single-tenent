@@ -10,16 +10,25 @@ import { randomUUID } from "crypto";
 
 @Injectable()
 export class CorrelationIdInterceptor implements NestInterceptor {
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    const request = context.switchToHttp().getRequest();
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
+    const request = context
+      .switchToHttp()
+      .getRequest<{
+        headers: Record<string, string | string[] | undefined>;
+        correlationId?: string;
+      }>();
     const response = context.switchToHttp().getResponse();
 
-    let correlationId = request.headers[CORRELATION_ID_HEADER];
-    if (!correlationId) {
-      correlationId = randomUUID();
-      request.headers[CORRELATION_ID_HEADER] = correlationId;
-    }
+    const headerValue = request.headers[CORRELATION_ID_HEADER];
+    const candidate = Array.isArray(headerValue) ? headerValue[0] : headerValue;
+    const isSafeCorrelationId =
+      typeof candidate === "string" &&
+      candidate.length <= 128 &&
+      /^[A-Za-z0-9._:-]+$/.test(candidate);
+    const correlationId = isSafeCorrelationId ? candidate : randomUUID();
+
     request.correlationId = correlationId;
+    request.headers[CORRELATION_ID_HEADER] = correlationId;
     response.setHeader(CORRELATION_ID_HEADER, correlationId);
 
     return next.handle();

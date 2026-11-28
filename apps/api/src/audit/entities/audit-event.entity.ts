@@ -39,7 +39,7 @@ export class AuditEvent {
   correlationId!: string | null;
 
   @Column({ type: "jsonb", nullable: true })
-  metadata!: Record<string, any> | null;
+  metadata!: Record<string, unknown> | null;
 
   @CreateDateColumn({ type: "timestamp with time zone" })
   createdAt!: Date;

@@ -11,12 +11,21 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
         const redisUrl =
           configService.get<string>("redis.url") || "redis://localhost:6379";
         const url = new URL(redisUrl);
+        const database = url.pathname.length > 1 ? Number(url.pathname.slice(1)) : 0;
+
+        if (!Number.isInteger(database) || database < 0) {
+          throw new Error("REDIS_URL path must contain a non-negative database number");
+        }
 
         return {
           connection: {
             host: url.hostname || "localhost",
-            port: parseInt(url.port || "6379", 10),
-            password: url.password || undefined,
+            port: Number(url.port || 6379),
+            username: url.username ? decodeURIComponent(url.username) : undefined,
+            password: url.password ? decodeURIComponent(url.password) : undefined,
+            db: database,
+            tls: url.protocol === "rediss:" ? {} : undefined,
+            maxRetriesPerRequest: null,
           },
         };
       },

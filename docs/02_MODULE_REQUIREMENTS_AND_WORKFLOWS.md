@@ -4,7 +4,12 @@
 
 Users, roles/permissions, sessions, audit events, error handling, correlation IDs, health checks, English/Hindi/Marathi i18n, private file abstraction, Redis/BullMQ queues, feature flags, configuration validation and CI/CD baseline.
 
-## M2 — Student and Academic Management
+## M2 — PS D:\sarvontech\school-erp-single-tenent> git fetch origin
+PS D:\sarvontech\school-erp-single-tenent> git switch --track origin/M2-Student-and-Academic-Management
+
+fatal: invalid reference: origin/M2-Student-and-Academic-Management
+PS D:\sarvontech\school-erp-single-tenent> 
+
 
 Build before admissions because admissions needs academic year, class, section and subject choices. Includes academic years/terms, classes/sections/subjects, teacher assignments, student master, guardian relationships, enrollment, status lifecycle, promotion, transfer and archived states.
 

@@ -6,6 +6,7 @@ import {
 } from "@nestjs/swagger";
 import { Request } from "express";
 import { HealthService } from "./health.service";
+import { Public } from "../auth/auth.decorators";
 import {
   HealthStatusResponse,
   ComponentHealthResponse,
@@ -14,6 +15,7 @@ import { CORRELATION_ID_HEADER } from "../common/constants";
 
 @ApiTags("Health")
 @Controller("health")
+@Public()
 export class HealthController {
   constructor(private readonly healthService: HealthService) {}
 
@@ -22,8 +24,8 @@ export class HealthController {
   @SwaggerApiResponse({ status: 200, description: "API health status" })
   getHealth(@Req() req: Request): HealthStatusResponse {
     const correlationId =
-      (req.headers[CORRELATION_ID_HEADER] as string) ||
-      (req as any).correlationId;
+      (req as Request & { correlationId?: string }).correlationId ||
+      (req.headers[CORRELATION_ID_HEADER] as string);
     return this.healthService.getApiHealth(correlationId);
   }
 

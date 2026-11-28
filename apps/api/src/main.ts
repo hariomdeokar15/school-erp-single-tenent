@@ -24,6 +24,10 @@ async function bootstrap() {
     "http://localhost:3001",
   ]);
 
+  // Never trust caller-supplied forwarded headers. Deployments behind a proxy
+  // must add an explicit, narrowly scoped proxy allowlist before using client IPs.
+  app.getHttpAdapter().getInstance().set("trust proxy", false);
+
   // Security Headers via Helmet
   app.use(helmet());
 
