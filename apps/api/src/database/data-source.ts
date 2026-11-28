@@ -58,7 +58,8 @@ export const dataSourceOptions: DataSourceOptions = {
   ],
   migrations: [__dirname + "/migrations/*.{ts,js}"],
   synchronize: false, // Strict migration discipline
-  logging: process.env.NODE_ENV === "development",
+  // Keep migration/CLI query output quiet and avoid exposing SQL parameters.
+  logging: false,
   migrationsTableName: "typeorm_migrations",
 };
 

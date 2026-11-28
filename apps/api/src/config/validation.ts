@@ -77,8 +77,11 @@ export const environmentSchema = z
     EMAIL_OUTBOX_ACTIVE_KEY_VERSION: z.string().default(""),
     EMAIL_TRANSPORT: z.enum(["test", "brevo"]).default("test"),
     BREVO_API_KEY: z.string().optional(),
-    BREVO_SENDER_EMAIL: z.string().email().optional(),
-    BREVO_SENDER_NAME: z.string().max(100).default("SchoolERP"),
+    BREVO_SENDER_EMAIL: z.preprocess(
+      (value) => (value === "" ? undefined : value),
+      z.string().email().optional(),
+    ),
+    BREVO_SENDER_NAME: z.string().min(1).max(100).default("SchoolERP"),
     ALLOW_LIVE_EMAILS: z
       .enum(["true", "false"])
       .default("false")
@@ -178,20 +181,16 @@ export const environmentSchema = z
           message: "Outbox encryption keys are required in production",
         });
       }
-      if (
-        environment.EMAIL_TRANSPORT === "brevo" &&
-        !environment.BREVO_API_KEY
-      ) {
+    }
+    if (environment.EMAIL_TRANSPORT === "brevo") {
+      if (!environment.BREVO_API_KEY) {
         context.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["BREVO_API_KEY"],
           message: "BREVO_API_KEY is required when EMAIL_TRANSPORT=brevo",
         });
       }
-      if (
-        environment.EMAIL_TRANSPORT === "brevo" &&
-        !environment.BREVO_SENDER_EMAIL
-      ) {
+      if (!environment.BREVO_SENDER_EMAIL) {
         context.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["BREVO_SENDER_EMAIL"],

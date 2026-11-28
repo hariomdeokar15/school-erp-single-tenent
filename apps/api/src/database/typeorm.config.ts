@@ -56,7 +56,8 @@ export const getTypeOrmConfig = (
     ],
     migrations: [__dirname + "/migrations/*.{ts,js}"],
     synchronize: false, // Never auto-synchronize in production or dev
-    logging: environment === "development",
+    // SQL includes private account and recovery data; keep query logging off.
+    logging: false,
     autoLoadEntities: true,
   };
 };

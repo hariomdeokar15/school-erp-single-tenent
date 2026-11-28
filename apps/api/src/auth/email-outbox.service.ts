@@ -40,6 +40,35 @@ interface ClaimedRow {
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+function diagnosticErrorCode(error: unknown): string {
+  if (!(error instanceof Error)) return "email_dispatch_error";
+
+  if (/^brevo_http_\d{3}(?:_[A-Za-z0-9_.-]{1,36})?$/.test(error.message)) {
+    return error.message;
+  }
+  if (error.message === "email_live_transport_not_approved_or_configured") {
+    return error.message;
+  }
+  if (error.name === "TimeoutError" || error.name === "AbortError") {
+    return "email_provider_timeout";
+  }
+  if (error.message === "Email outbox encryption key version is unavailable") {
+    return "email_encryption_key_version_unavailable";
+  }
+
+  const cause = (error as Error & { cause?: unknown }).cause;
+  if (cause && typeof cause === "object" && "code" in cause) {
+    const code = (cause as { code?: unknown }).code;
+    if (typeof code === "string" && /^[A-Z0-9_]{2,40}$/.test(code)) {
+      return `email_network_${code.toLowerCase()}`.slice(0, 64);
+    }
+  }
+  if (error instanceof TypeError && error.message === "fetch failed") {
+    return "email_transport_network_error";
+  }
+  return "email_dispatch_error";
+}
+
 function returnedRows(value: unknown): Record<string, unknown>[] {
   if (!Array.isArray(value)) {
     throw new Error("Email outbox update returned an invalid result set");
@@ -413,14 +442,16 @@ export class EmailOutboxService implements OnModuleInit, OnModuleDestroy {
       });
       await this.finish(row, EmailOutboxStatus.ACCEPTED, null);
     } catch (error) {
+      const errorCode = diagnosticErrorCode(error);
       const retryable =
+        !(error instanceof Error) ||
         (error as Error & { retryable?: boolean }).retryable !== false;
       const expiring = row.expiresAt && row.expiresAt.getTime() <= Date.now();
       if (!retryable || expiring || row.attemptCount >= this.maxAttempts) {
         await this.finish(
           row,
           expiring ? EmailOutboxStatus.EXPIRED : EmailOutboxStatus.FAILED,
-          "delivery_failed",
+          expiring ? "token_expired" : errorCode,
         );
         return;
       }
@@ -432,9 +463,9 @@ export class EmailOutboxService implements OnModuleInit, OnModuleDestroy {
           await manager.query(
             `UPDATE "email_outbox" SET "status"='QUEUED', "leaseId"=NULL,
           "leaseExpiresAt"=NULL, "availableAt"=now()+($1::text || ' seconds')::interval,
-          "lastErrorCode"='delivery_failed'
-         WHERE "id"=$2 AND "leaseId"=$3 AND "status"='PROCESSING' RETURNING "id"`,
-            [delaySeconds, row.id, row.leaseId],
+          "lastErrorCode"=$2
+          WHERE "id"=$3 AND "leaseId"=$4 AND "status"='PROCESSING' RETURNING "id"`,
+            [delaySeconds, errorCode, row.id, row.leaseId],
           ),
         );
         if (updated.length) {
@@ -446,7 +477,7 @@ export class EmailOutboxService implements OnModuleInit, OnModuleDestroy {
               entityId: row.id,
               metadata: {
                 kind: row.kind,
-                errorCode: "delivery_failed",
+                errorCode,
                 attempt: row.attemptCount,
               },
             },
